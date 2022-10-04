@@ -267,6 +267,17 @@ class IntermediateDatablock:
     bins: Tuple[bool, bool, bool, bool] = field(
         default_factory=lambda: (False, False, False, False)
     )
+	
+    def merge_verts(self, me) -> bpy.types.Mesh:
+        # merge duplicate verts
+        bm = bmesh.new()   # create an empty BMesh
+        bm.from_mesh(me)   # fill it in from a Mesh
+
+        # remove the duplicate verts from the BMesh
+        bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=0.0001)
+
+        # Finish up, write the bmesh back to the mesh
+        bm.to_mesh(me)
 
     def build_mesh(self, vt_table: "VTTable") -> bpy.types.Mesh:
         """
@@ -314,6 +325,10 @@ class IntermediateDatablock:
 
             me.calc_normals()
             me.update(calc_edges=True)
+
+            # merge the nearby duplicate vertices
+            self.merge_verts(me)
+
             ob = test_creation_helpers.create_datablock_mesh(
                 self.datablock_info,
                 mesh_src=me,
