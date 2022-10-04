@@ -128,7 +128,7 @@ class XPlaneMesh:
                             else tmp_face.normal
                         )
                         uv = tmp_face.uvs[i]
-                        vt_entry = tuple(vertex[:] + normal[:] + uv[:])
+                        vt_entry = tuple(map(lambda n: int(n*10000), vertex[:] + normal[:] + uv[:]))
 
                         # Optimization Algorithm:
                         # Try to find a matching vt_entry's index in the mesh's index table
@@ -168,7 +168,7 @@ class XPlaneMesh:
         if debug:
             s = "".join(
                 f"VT\t"
-                f"{tab.join(floatToStr(component) for component in line)}"
+                f"{tab.join(floatToStr(component/10000) for component in line)}"
                 f"\t# {i}"
                 f"\n"
                 for i, line in enumerate(self.vertices)
@@ -177,7 +177,7 @@ class XPlaneMesh:
             return s
         else:
             s = "".join(
-                f"VT\t" f"{tab.join(floatToStr(component) for component in line)}" f"\n"
+                f"VT\t" f"{tab.join(floatToStr(component/10000) for component in line)}" f"\n"
                 for line in self.vertices
             )
             # print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
