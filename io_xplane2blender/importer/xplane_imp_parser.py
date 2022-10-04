@@ -275,6 +275,27 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             builder.build_cmd(
                 directive, dxyz, r1, r2, v1, v2, path, name_hint=name_hint
             )
+        elif directive == "ATTR_light_level":
+            try:
+                v1 = float(components[0])
+                v2 = float(components[1])
+                path = components[2]
+            except IndexError:
+                pass
+            logger.info(f"parsed: {directive} {v1} {v2} {path}")
+            builder.build_cmd(
+                directive, v1, v2, path, name_hint=name_hint
+            )
+        elif directive == "POINT_COUNTS":
+            # handled
+            try:
+                v1 = int(components[0])
+                v2 = int(components[1])
+                v3 = int(components[2])
+                v4 = int(components[3])
+            except IndexError:
+                pass
+            logger.info(f"{directive} {v1} {v2} {v3} {v4}")
         else:
             logger.warn(f"Directive {directive} is not parsed yet")
             pass

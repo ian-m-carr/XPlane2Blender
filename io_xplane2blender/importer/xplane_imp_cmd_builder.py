@@ -445,6 +445,13 @@ class _AnimIntermediateStackEntry:
     intermediate_datablock: Optional[IntermediateDatablock]
 
 
+@dataclass
+class Attr_light_level:
+    v1: float
+    v2: float
+    path: str
+
+
 class ImpCommandBuilder:
     def __init__(self, filepath: Path):
         self.root_collection = test_creation_helpers.create_datablock_collection(
@@ -489,6 +496,8 @@ class ImpCommandBuilder:
         self._anim_count: Sequence[int] = collections.deque()
         self._bake_matrix_stack: Deque[Matrix] = collections.deque((Matrix(),))
         # ---------------------------------------------------------------------
+
+        self.attr_light_level = None
 
     def build_cmd(
         self, directive: str, *args: List[Union[float, int, str]], name_hint: str = ""
@@ -563,6 +572,11 @@ class ImpCommandBuilder:
                 children=[],
                 bins=tuple(self.current_bins),
             )
+
+            if self.attr_light_level != None:
+                intermediate_datablock.attr_light_level = self.attr_light_level
+                self.attr_light_level = None
+
             self._blocks.append(intermediate_datablock)
             parent.children.append(intermediate_datablock)
         elif directive == "ATTR_LOD":
@@ -741,6 +755,8 @@ class ImpCommandBuilder:
             elif r_r1 != r_r2 and r_v1 != r_v2:
                 # print("rot, case D - dynamic")
                 add_as_dynamic()
+        elif directive == "ATTR_light_level":
+            self.attr_light_level = Attr_light_level(v1=args[0], v2=args[1], path=args[2])
         else:
             assert False, f"{directive} is not supported yet"
 
@@ -1219,6 +1235,14 @@ class ImpCommandBuilder:
 
                 for animation in out_block.show_hide_animations:
                     animation.apply_animation(ob)
+
+                try:
+                    ob.xplane.lightLevel_v1 = out_block.attr_light_level.v1
+                    ob.xplane.lightLevel_v2 = out_block.attr_light_level.v2
+                    ob.xplane.lightLevel_dataref = out_block.attr_light_level.path
+                    ob.xplane.lightLevel = True
+                except AttributeError:
+                    pass
 
         # end while for searching remaining blocks
         # TODO: Unit test, and what about a bunch of animations that get optimized out with not TRIS blocks?
