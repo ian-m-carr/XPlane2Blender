@@ -529,6 +529,11 @@ def create_datablock_mesh(
 
     def create_object(name, mesh):
         ob = bpy.data.objects.new(name, object_data=mesh)
+
+        # set the mesh faces to smooth by default
+        for face in ob.data.polygons:
+            face.use_smooth = True
+            
         return ob
 
     if isinstance(mesh_src, bpy.types.Mesh):
