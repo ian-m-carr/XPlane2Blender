@@ -320,6 +320,9 @@ class IntermediateDatablock:
             for mesh_uv_loop, mesh_loop in zip(me.uv_layers[-1].data, me.loops):
                 mesh_uv_loop.uv = uvs[mesh_loop.vertex_index]
 
+            # IMC for 3.3 this needs to use the new vertex_normals collection as the vertex.normal property becomes readonly
+            #   for i, vertex_normal in enumerate(me.vertex_normals):
+            #       vertex_normal = normals[i]
             for i, vertex in enumerate(me.vertices):
                 vertex.normal = normals[i]
 
