@@ -153,8 +153,36 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             else:
                 if texture_path.exists():
                     builder.texture = texture_path
+                    builder.root_collection.xplane.layer.texture = str(texture_path)
                 else:
-                    logger.warn(f"'{str(texture_path)}' is not a real file")
+                    logger.warn(f"TEXTURE File: '{str(texture_path)}' is not a real file")
+        elif directive == "TEXTURE_LIT":
+            try:
+                texture_path = (filepath.parent / Path(components[0])).resolve()
+            except IndexError:
+                logger.warn(f"TEXTURE_LIT directive given but was empty")
+            else:
+                if texture_path.exists():
+                    builder.root_collection.xplane.layer.texture_lit = str(texture_path)
+                else:
+                    logger.warn(f"TEXTURE_LIT File: '{str(texture_path)}' is not a real file")
+        elif directive == "TEXTURE_NORMAL":
+            try:
+                texture_path = (filepath.parent / Path(components[0])).resolve()
+            except IndexError:
+                logger.warn(f"TEXTURE_NORMAL directive given but was empty")
+            else:
+                if texture_path.exists():
+                    builder.root_collection.xplane.layer.texture_normal = str(texture_path)
+                else:
+                    logger.warn(f"TEXTURE_NORMAL File: '{str(texture_path)}' is not a real file")
+        elif directive == "NORMAL_METALNESS":
+            builder.root_collection.xplane.layer.normal_metalness = True
+        elif directive == "BLEND_GLASS":
+            builder.root_collection.xplane.layer.blend_glass = True
+        elif directive == "GLOBAL_luminance":
+            builder.root_collection.xplane.layer.luminance_override = True
+            builder.root_collection.xplane.layer.luminance = int(components[0])
         elif directive == "VT":
             components[:3] = vec_x_to_b(list(map(float, components[:3])))
             components[3:6] = vec_x_to_b(list(map(float, components[3:6])))
@@ -248,7 +276,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
                 directive, dxyz, r1, r2, v1, v2, path, name_hint=name_hint
             )
         else:
-            # print(f"{directive} is not implemted yet")
+            logger.warn(f"Directive {directive} is not parsed yet")
             pass
 
     builder.finalize_intermediate_blocks()
