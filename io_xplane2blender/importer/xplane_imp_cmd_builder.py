@@ -282,7 +282,7 @@ class IntermediateDatablock:
         else:
             me
 
-    def build_mesh(self, vt_table: "VTTable") -> bpy.types.Mesh:
+    def build_mesh(self, vt_table: "VTTable", material_name: str) -> bpy.types.Mesh:
         """
         Builds a mesh from the OBJ's VT Table, raises ValueError if
         an object with that mesh couldn't be built
@@ -338,6 +338,7 @@ class IntermediateDatablock:
             ob = test_creation_helpers.create_datablock_mesh(
                 self.datablock_info,
                 mesh_src=me,
+                material_name="Material" if material_name == None else material_name
             )
             ob.xplane.override_lods = any(self.bins)
             if ob.xplane.override_lods:
@@ -504,6 +505,7 @@ class ImpCommandBuilder:
         # ---------------------------------------------------------------------
 
         self.attr_light_level = None
+        self.material_name = "Material"
 
     def build_cmd(
         self, directive: str, *args: List[Union[float, int, str]], name_hint: str = ""
@@ -1219,13 +1221,13 @@ class ImpCommandBuilder:
                 )
             elif out_block.datablock_type == "MESH":
                 try:
-                    ob = out_block.build_mesh(self.vt_table)
+                    ob = out_block.build_mesh(self.vt_table, self.material_name)
                 except ValueError:
                     ob = None
                 else:
                     if self.texture:
                         test_creation_helpers.set_material(
-                            ob, "Material", texture_image=self.texture
+                            ob, self.material_name, texture_image=self.texture
                         )
 
             if ob:

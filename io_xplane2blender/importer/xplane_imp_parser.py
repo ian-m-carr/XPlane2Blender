@@ -153,6 +153,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             else:
                 if texture_path.exists():
                     builder.texture = texture_path
+                    builder.material_name = "Material_" + Path(texture_path).stem
                     builder.root_collection.xplane.layer.texture = str(texture_path)
                 else:
                     logger.warn(f"TEXTURE File: '{str(texture_path)}' is not a real file")
