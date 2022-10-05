@@ -392,10 +392,20 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
             collection_layer_layout(non_exp_box, collection)
 
     advanced_box = layout.box()
-    advanced_box.label(text="Advanced Settings")
+    advanced_box.label(text="Advanced Settings (General)")
+    advanced_column = advanced_box.column()
+    advanced_column.prop(scene.xplane, "debug")
+
+    advanced_box = layout.box()
+    advanced_box.label(text="Advanced Settings (EXPORT)")
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "optimize")
-    advanced_column.prop(scene.xplane, "debug")
+
+    advanced_box = layout.box()
+    advanced_box.label(text="Advanced Settings (IMPORT)")
+    advanced_column = advanced_box.column()
+    advanced_column.prop(scene.xplane, "smooth")
+    advanced_column.prop(scene.xplane, "remove_doubles")
 
     if scene.xplane.debug:
         debug_box = advanced_column.box()

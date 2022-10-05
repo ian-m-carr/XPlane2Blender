@@ -1562,7 +1562,19 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     optimize: bpy.props.BoolProperty(
         name = "Optimize",
         description = "If checked file size will be optimized. However this can increase export time slightly",
-        default = False
+        default = True
+    )
+
+    smooth: bpy.props.BoolProperty(
+        name="Smooth",
+        description="If checked ALL imported mesh faces will be set to smooth rendering, adjusting the normals of the verts, this may require some manual flattening of subsets. choose based on the mix in your scene.",
+        default=True
+    )
+
+    remove_doubles: bpy.props.BoolProperty(
+        name="Merge-Verts",
+        description="If checked All imported meshes will be run through the BMesh  bmesh.ops.remove_doubles to reduce the vert count if possible.",
+        default=True
     )
 
     version: bpy.props.EnumProperty(

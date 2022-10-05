@@ -530,9 +530,11 @@ def create_datablock_mesh(
     def create_object(name, mesh):
         ob = bpy.data.objects.new(name, object_data=mesh)
 
-        # set the mesh faces to smooth by default
-        for face in ob.data.polygons:
-            face.use_smooth = True
+        # check if the smoothing operation is requested in the scene properties
+        if bpy.context.scene.xplane.smooth:
+            # set the mesh faces to smooth by default
+            for face in ob.data.polygons:
+                face.use_smooth = True
             
         return ob
 

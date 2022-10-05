@@ -269,15 +269,18 @@ class IntermediateDatablock:
     )
 	
     def merge_verts(self, me) -> bpy.types.Mesh:
-        # merge duplicate verts
-        bm = bmesh.new()   # create an empty BMesh
-        bm.from_mesh(me)   # fill it in from a Mesh
+        # if the remove_doubles option is requested in the scene properties
+        if bpy.context.scene.xplane.remove_doubles:
+            bm = bmesh.new()   # create an empty BMesh
+            bm.from_mesh(me)   # fill it in from a Mesh
 
-        # remove the duplicate verts from the BMesh
-        bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=0.0001)
+            # remove the duplicate verts from the BMesh
+            bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=0.0001)
 
-        # Finish up, write the bmesh back to the mesh
-        bm.to_mesh(me)
+            # Finish up, write the bmesh back to the mesh
+            bm.to_mesh(me)
+        else:
+            me
 
     def build_mesh(self, vt_table: "VTTable") -> bpy.types.Mesh:
         """
