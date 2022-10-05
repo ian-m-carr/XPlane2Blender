@@ -51,6 +51,7 @@ class XPlaneMesh:
         xplaneObjects = sorted(xplaneObjects, key=getSortKey)
 
         dg = bpy.context.evaluated_depsgraph_get()
+        vertices_dct = {}
         for xplaneObject in xplaneObjects:
             if (
                 xplaneObject.type == "MESH"
@@ -115,7 +116,6 @@ class XPlaneMesh:
                     )
                     tmp_faces.append(tmp_face)
 
-                vertices_dct = {}
                 for tmp_face in tmp_faces:
                     # To reverse the winding order for X-Plane from CCW to CW,
                     # we iterate backwards through the mesh data structures
