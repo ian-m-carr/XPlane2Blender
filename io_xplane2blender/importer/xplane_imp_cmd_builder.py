@@ -587,7 +587,6 @@ class ImpCommandBuilder:
 
             if self.attr_light_level != None:
                 intermediate_datablock.attr_light_level = self.attr_light_level
-                self.attr_light_level = None
 
             self._blocks.append(intermediate_datablock)
             parent.children.append(intermediate_datablock)
@@ -769,6 +768,8 @@ class ImpCommandBuilder:
                 add_as_dynamic()
         elif directive == "ATTR_light_level":
             self.attr_light_level = Attr_light_level(v1=args[0], v2=args[1], path=args[2])
+        elif directive == "ATTR_light_level_reset":
+            self.attr_light_level = None
         else:
             assert False, f"{directive} is not supported yet"
 

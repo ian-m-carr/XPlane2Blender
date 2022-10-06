@@ -287,6 +287,8 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             builder.build_cmd(
                 directive, v1, v2, path, name_hint=name_hint
             )
+        elif directive == "ATTR_light_level_reset":
+            builder.build_cmd(directive)
         elif directive == "POINT_COUNTS":
             # handled
             try:
