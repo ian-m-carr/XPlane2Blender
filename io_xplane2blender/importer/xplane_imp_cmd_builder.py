@@ -323,11 +323,15 @@ class IntermediateDatablock:
             for mesh_uv_loop, mesh_loop in zip(me.uv_layers[-1].data, me.loops):
                 mesh_uv_loop.uv = uvs[mesh_loop.vertex_index]
 
-            # IMC for 3.3 this needs to use the new vertex_normals collection as the vertex.normal property becomes readonly
-            #   for i, vertex_normal in enumerate(me.vertex_normals):
-            #       vertex_normal = normals[i]
-            for i, vertex in enumerate(me.vertices):
-                vertex.normal = normals[i]
+            try:
+                # IMC for Blender 3+ this needs to use the new vertex_normals collection
+                # as the vertex.normal property became readonly
+                for i, vertex_normal in enumerate(me.vertex_normals):
+                    vertex_normal = normals[i]
+            except:
+                # if we can't find vertex_normals, try it the old way
+                for i, vertex in enumerate(me.vertices):
+                    vertex.normal = normals[i]
 
             me.calc_normals()
             me.update(calc_edges=True)
