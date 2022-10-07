@@ -153,30 +153,36 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             else:
                 if texture_path.exists():
                     builder.texture = texture_path
-                    builder.material_name = "Material_" + Path(texture_path).stem
+                    builder.material_name = "Material_" + Path(filepath).stem
+                    builder.root_collection.xplane.layer.texture = str(texture_path)
+                elif pathlib.Path(texture_path).suffix == ".png" and texture_path.with_suffix(".dds").exists():
+                    # load the image from the alternative file
+                    builder.texture = texture_path.with_suffix(".dds")
+                    builder.material_name = "Material_" + Path(filepath).stem
+                    # but leave the property with the png version - x-plane will substitute it itself
                     builder.root_collection.xplane.layer.texture = str(texture_path)
                 else:
-                    logger.warn(f"TEXTURE File: '{str(texture_path)}' is not a real file")
+                    logger.warn(f"TEXTURE File: '{str(texture_path)}' does not exist and no alternative dds found")
         elif directive == "TEXTURE_LIT":
             try:
                 texture_path = (filepath.parent / Path(components[0])).resolve()
             except IndexError:
                 logger.warn(f"TEXTURE_LIT directive given but was empty")
             else:
-                if texture_path.exists():
+                if texture_path.exists() or pathlib.Path(texture_path).suffix == ".png" and texture_path.with_suffix(".dds").exists():
                     builder.root_collection.xplane.layer.texture_lit = str(texture_path)
                 else:
-                    logger.warn(f"TEXTURE_LIT File: '{str(texture_path)}' is not a real file")
+                    logger.warn(f"TEXTURE_LIT File: '{str(texture_path)}' does not exist and no alternative dds found")
         elif directive == "TEXTURE_NORMAL":
             try:
                 texture_path = (filepath.parent / Path(components[0])).resolve()
             except IndexError:
                 logger.warn(f"TEXTURE_NORMAL directive given but was empty")
             else:
-                if texture_path.exists():
+                if texture_path.exists() or pathlib.Path(texture_path).suffix == ".png" and texture_path.with_suffix(".dds").exists():
                     builder.root_collection.xplane.layer.texture_normal = str(texture_path)
                 else:
-                    logger.warn(f"TEXTURE_NORMAL File: '{str(texture_path)}' is not a real file")
+                    logger.warn(f"TEXTURE_NORMAL File: '{str(texture_path)}' does not exist and no alternative dds found")
         elif directive == "NORMAL_METALNESS":
             builder.root_collection.xplane.layer.normal_metalness = True
         elif directive == "BLEND_GLASS":
