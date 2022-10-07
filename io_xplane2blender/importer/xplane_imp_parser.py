@@ -293,7 +293,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
                 path = components[2]
             except IndexError:
                 pass
-            
+
             builder.build_cmd(
                 directive, v1, v2, path, name_hint=name_hint
             )
@@ -304,17 +304,17 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         # Drawing state management
         # ============================
         elif directive == "ATTR_draw_disable":
-            logger.warn(f"STATE Directive {directive} is not implemented yet")
+            builder.build_cmd(directive)
         elif directive == "ATTR_draw_enable":
-            logger.warn(f"STATE Directive {directive} is not implemented yet")
+            builder.build_cmd(directive)
 
         # =================================
         # Camera collision state management
         # =================================
         elif directive =="ATTR_solid_camera":
-            logger.warn(f"STATE Directive {directive} is not implemented yet")
+            builder.build_cmd(directive)
         elif directive == "ATTR_no_solid_camera":
-            logger.warn(f"STATE Directive {directive} is not implemented yet")
+            builder.build_cmd(directive)
 
         #=============
         # MANIPULATORS

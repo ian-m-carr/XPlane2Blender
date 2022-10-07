@@ -566,9 +566,45 @@ class ImpCommandBuilder:
         self.material_name: str = "Material"
         self.current_manipulator: Attr_manip = None
 
-    def build_cmd(
-        self, directive: str, *args: List[Union[float, int, str]], name_hint: str = ""
-    ):
+        self.draw_enabled: bool = True
+        self.solid_camera: bool = False
+
+    def get_material_name(self) -> str:
+        name:str = None
+        if self.draw_enabled:
+            if self.solid_camera:
+                name = self.material_name + "_SOLID"
+                # ensure the material exists and the properties are set up correctly
+                if (test_creation_helpers.get_material(name) == None):
+                    mat = test_creation_helpers.create_material(name)
+                    mat.xplane.draw = True
+                    mat.xplane.solid_camera = True
+            else:
+                name = self.material_name
+                # ensure the material exists and the properties are set up correctly
+                if (test_creation_helpers.get_material(name) == None):
+                    mat = test_creation_helpers.create_material(name)
+                    mat.xplane.draw = True
+                    mat.xplane.solid_camera = False
+        else:
+            if self.solid_camera:
+                name = self.material_name + "_NO_DRAW_SOLID"
+                # ensure the material exists and the properties are set up correctly
+                if (test_creation_helpers.get_material(name) == None):
+                    mat = test_creation_helpers.create_material(name)
+                    mat.xplane.draw = False
+                    mat.xplane.solid_camera = True
+            else:
+                name = self.material_name + "_NO_DRAW"
+                # ensure the material exists and the properties are set up correctly
+                if (test_creation_helpers.get_material(name) == None):
+                    mat = test_creation_helpers.create_material(name)
+                    mat.xplane.draw = False
+                    mat.xplane.solid_camera = False
+        return name
+
+
+    def build_cmd(self, directive: str, *args: List[Union[float, int, str]], name_hint: str = ""):
         """
         Given the directive and it's arguments, correctly handle each case.
 
@@ -639,6 +675,9 @@ class ImpCommandBuilder:
                 children=[],
                 bins=tuple(self.current_bins),
             )
+
+            # derive the mesh-name from the current draw and solid camera state variables
+            intermediate_datablock.material_name = self.get_material_name()
 
             if self.attr_light_level != None:
                 intermediate_datablock.attr_light_level = self.attr_light_level
@@ -835,10 +874,18 @@ class ImpCommandBuilder:
         # ============================
         # Drawing state management
         # ============================
+        elif directive == "ATTR_draw_disable":
+            self.draw_enabled = False
+        elif directive == "ATTR_draw_enable":
+            self.draw_enabled = True
 
         # =================================
         # Camera collision state management
         # =================================
+        elif directive =="ATTR_solid_camera":
+            self.solid_camera = True
+        elif directive == "ATTR_no_solid_camera":
+            self.solid_camera = False
 
         # =============
         # MANIPULATORS
@@ -1413,15 +1460,14 @@ class ImpCommandBuilder:
                 )
             elif out_block.datablock_type == "MESH":
                 try:
-                    ob = out_block.build_mesh(self.vt_table, self.material_name)
+                    ob = out_block.build_mesh(self.vt_table, out_block.material_name)
                 except ValueError:
                     ob = None
                 else:
                     if self.texture:
                         test_creation_helpers.set_material(
-                            ob, self.material_name, texture_image=self.texture
+                            ob, out_block.material_name, texture_image=self.texture
                         )
-
             if ob:
                 ob.matrix_local = out_block.bake_matrix.copy()
                 bpy.context.view_layer.update()
