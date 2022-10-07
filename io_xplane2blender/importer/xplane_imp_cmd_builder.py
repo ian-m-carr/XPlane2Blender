@@ -47,6 +47,26 @@ from io_xplane2blender.xplane_constants import (
     ANIM_TYPE_TRANSFORM,
     PRECISION_KEYFRAME,
     MANIP_COMMAND,
+    MANIP_COMMAND_KNOB,
+    MANIP_COMMAND_KNOB2,
+    MANIP_COMMAND_SWITCH_UP_DOWN,
+    MANIP_COMMAND_SWITCH_UP_DOWN2,
+    MANIP_COMMAND_SWITCH_LEFT_RIGHT,
+    MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
+    MANIP_DRAG_ROTATE,
+    MANIP_DRAG_XY,
+    MANIP_DRAG_AXIS,
+    MANIP_DELTA,
+    MANIP_WRAP,
+    MANIP_TOGGLE,
+    MANIP_AXIS_KNOB,
+    MANIP_AXIS_SWITCH_UP_DOWN,
+    MANIP_AXIS_SWITCH_LEFT_RIGHT,
+    MANIP_NOOP,
+    MANIP_PUSH,
+    MANIP_RADIO,
+    MANIP_COMMAND_AXIS,
+    MANIP_DRAG_AXIS_PIX,
     MANIP_CURSOR_HAND
 )
 from io_xplane2blender.xplane_helpers import (
@@ -70,7 +90,7 @@ class Attr_manip:
     # axis_detent_ranges: collection ???
     type: str = ""
     tooltip: str = ""
-    cursor: str = ""
+    cursor: str = MANIP_CURSOR_HAND
     dx: float = 0.0
     dy: float = 0.0
     dz: float = 0.0
@@ -825,8 +845,118 @@ class ImpCommandBuilder:
         # =============
         elif directive == "ATTR_manip_none":
             self.current_manipulator = None
+        elif directive == "ATTR_manip_drag_xy":
+            self.current_manipulator = Attr_manip(type=MANIP_DRAG_XY, cursor=args[0],
+                                                  dx=float(args[1]), dy=float(args[2]),
+                                                  v1_min=float(args[3]), v1_max=float(args[4]),
+                                                  v2_min=float(args[5]), v2_max=float(args[6]),
+                                                  dataref1=args[7], dataref2=args[8],
+                                                  tooltip=args[9])
+        elif directive == "ATTR_manip_drag_axis":
+            self.current_manipulator = Attr_manip(type=MANIP_DRAG_AXIS, cursor=args[0],
+                                                  dx=float(args[1]), dy=float(args[2]), dz=float(args[3]),
+                                                  v1=float(args[4]), v2=float(args[5]),
+                                                  dataref1=args[6],
+                                                  tooltip=args[7])
         elif directive == "ATTR_manip_command":
-            self.current_manipulator = Attr_manip(type = MANIP_COMMAND, cursor=args[0], command=args[1], tooltip=args[2])
+            self.current_manipulator = Attr_manip(type=MANIP_COMMAND, cursor=args[0], command=args[1], tooltip=args[2])
+        elif directive == "ATTR_manip_command_axis":
+            self.current_manipulator = Attr_manip(type=MANIP_COMMAND_AXIS, cursor=args[0],
+                                                  dx=float(args[1]), dy=float(args[2]), dz=float(args[3]),
+                                                  positive_command=args[4], negative_command=args[5],
+                                                  tooltip=args[6])
+        elif directive == "ATTR_manip_noop":
+            self.current_manipulator = Attr_manip(type=MANIP_NOOP)
+        elif directive == "ATTR_manip_push":
+            self.current_manipulator = Attr_manip(type=MANIP_PUSH, cursor=args[0],
+                                                  v_down=float(args[1]), v_up=float(args[2]),
+                                                  dataref1=args[3], tooltip=args[4])
+        elif directive == "ATTR_manip_radio":
+            self.current_manipulator = Attr_manip(type=MANIP_RADIO, cursor=args[0],
+                                                  v_down=float(args[1]),
+                                                  dataref1=args[2],
+                                                  tooltip=args[3])
+        elif directive == "ATTR_manip_toggle":
+            self.current_manipulator = Attr_manip(type=MANIP_TOGGLE, cursor=args[0],
+                                                  v1=float(args[1]), v2=float(args[2]),
+                                                  dataref1=args[3], tooltip=args[4])
+        elif directive == "ATTR_manip_delta":
+            self.current_manipulator = Attr_manip(type=MANIP_DELTA, cursor=args[0],
+                                                  v_down=float(args[1]), v_hold=float(args[2]),
+                                                  v1_min=float(args[3]), v1_max=float(args[4]),
+                                                  dataref1=args[5],
+                                                  tooltip=args[6])
+        elif directive == "ATTR_manip_wrap":
+            self.current_manipulator = Attr_manip(type=MANIP_WRAP, cursor=args[0],
+                                                  v_down=float(args[1]), v_hold=float(args[2]),
+                                                  v1_min=float(args[3]), v1_max=float(args[4]),
+                                                  dataref1=args[5],
+                                                  tooltip=args[6])
+        elif directive == "ATTR_manip_drag_axis_pix":
+            self.current_manipulator = Attr_manip(type=MANIP_DRAG_AXIS_PIX, cursor=args[0],
+                                                  dx=float(args[1]), step=float(args[2]),
+                                                  exp=float(args[3]), v1=float(args[4]), v2=float(args[5]),
+                                                  dataref1=args[6],
+                                                  tooltip=args[7])
+        elif directive == "ATTR_manip_command_knob":
+            self.current_manipulator = Attr_manip(type=MANIP_COMMAND_KNOB, cursor=args[0],
+                                                  positive_command=args[1], negative_command=args[2], tooltip=args[3])
+        elif directive == "ATTR_manip_command_knob2":
+            self.current_manipulator = Attr_manip(type=MANIP_COMMAND_KNOB2, cursor=args[0],
+                                                  command=args[1], tooltip=args[2])
+        elif directive == "ATTR_manip_command_switch_up_down":
+            self.current_manipulator = Attr_manip(type=MANIP_COMMAND_SWITCH_UP_DOWN, cursor=args[0],
+                                                  positive_command=args[1], negative_command=args[2], tooltip=args[3])
+        elif directive == "ATTR_manip_command_switch_up_down2":
+            self.current_manipulator = Attr_manip(type=MANIP_COMMAND_SWITCH_UP_DOWN2, cursor=args[0],
+                                                  command=args[1], tooltip=args[2])
+
+        elif directive == "ATTR_manip_command_switch_left_right":
+            self.current_manipulator = Attr_manip(type=MANIP_COMMAND_SWITCH_LEFT_RIGHT, cursor=args[0],
+                                                  positive_command=args[1], negative_command=args[2], tooltip=args[3])
+        elif directive == "ATTR_manip_command_switch_left_right2":
+            self.current_manipulator = Attr_manip(type=MANIP_COMMAND_SWITCH_LEFT_RIGHT2, cursor=args[0],
+                                                  command=args[1], tooltip=args[2])
+        elif directive == "ATTR_manip_axis_knob":
+            self.current_manipulator = Attr_manip(type=MANIP_AXIS_KNOB,
+                                                  cursor=args[0],
+                                                  v1_min=float(args[1]), v1_max=float(args[2]),
+                                                  click_step=float(args[3]), hold_step=float(args[4]),
+                                                  dataref1=args[5],
+                                                  tooltip=args[6])
+        elif directive == "ATTR_manip_axis_switch_up_down":
+            self.current_manipulator = Attr_manip(type=MANIP_AXIS_SWITCH_UP_DOWN,
+                                                  cursor=args[0],
+                                                  v1_min=float(args[1]), v1_max=float(args[2]),
+                                                  click_step=float(args[3]), hold_step=float(args[4]),
+                                                  dataref1=args[5],
+                                                  tooltip=args[6])
+        elif directive == "ATTR_manip_axis_switch_left_right":
+            self.current_manipulator = Attr_manip(type=MANIP_AXIS_SWITCH_LEFT_RIGHT,
+                                                  cursor=args[0],
+                                                  v1_min=float(args[1]), v1_max=float(args[2]),
+                                                  click_step=float(args[3]), hold_step=float(args[4]),
+                                                  dataref1=args[5],
+                                                  tooltip=args[6])
+        elif directive == "ATTR_manip_drag_rotate":
+            self.current_manipulator = Attr_manip(type=MANIP_DRAG_ROTATE, cursor=args[0],
+            #                                       x = args[1],
+            #                                       y = args[2],
+            #                                       z = args[3],
+                                                   dx = float(args[4]),
+                                                   dy = float(args[5]),
+                                                   dz = float(args[6]),
+            #                                       angle1 = args[7],
+            #                                       angle2 = args[8],
+            #                                       lift = args[10],
+                                                   v1_min=float(args[11]),
+                                                   v1_max=float(args[12]),
+                                                   v2_min=float(args[13]),
+                                                   dataref1=args[14],
+                                                   dataref2=args[15],
+                                                   tooltip=args[16]);
+            logger.warn(F"Manipulator {directive} is not yet fully handled - check your model!")
+
         else:
             assert False, f"{directive} is not supported yet"
 
