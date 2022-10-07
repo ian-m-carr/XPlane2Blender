@@ -373,11 +373,11 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         elif directive == "ATTR_manip_keyframe":
             logger.warn(f"Manipulator modifier directive {directive} is not implemented yet")
         elif directive == "ATTR_manip_wheel":
-            logger.warn(f"Manipulator modifier directive {directive} is not implemented yet")
+            builder.build_cmd(directive, components[0])
         elif directive == "ATTR_axis_detented":
-            logger.warn(f"Manipulator modifier directive {directive} is not implemented yet")
+            builder.build_cmd(directive, *components[0:6])
         elif directive == "ATTR_axis_detent_range":
-            logger.warn(f"Manipulator modifier directive {directive} is not implemented yet")
+            builder.build_cmd(directive, *components[0:3])
 
         elif directive == "POINT_COUNTS":
             # handled

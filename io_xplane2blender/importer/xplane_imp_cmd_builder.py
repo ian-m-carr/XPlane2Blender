@@ -54,8 +54,10 @@ from io_xplane2blender.xplane_constants import (
     MANIP_COMMAND_SWITCH_LEFT_RIGHT,
     MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
     MANIP_DRAG_ROTATE,
+    MANIP_DRAG_ROTATE_DETENT,
     MANIP_DRAG_XY,
     MANIP_DRAG_AXIS,
+    MANIP_DRAG_AXIS_DETENT,
     MANIP_DELTA,
     MANIP_WRAP,
     MANIP_TOGGLE,
@@ -115,6 +117,7 @@ class Attr_manip:
     hold_step: float = 0.0
     wheel_delta: float = 0.0
     exp: float = 1.0
+    detents = list()
 
 @dataclass
 class IntermediateDataref:
@@ -1004,6 +1007,42 @@ class ImpCommandBuilder:
                                                    tooltip=args[16]);
             logger.warn(F"Manipulator {directive} is not yet fully handled - check your model!")
 
+        # =====================
+        # MANIPULATOR MODIFIERS
+        # =====================
+        #elif directive == "ATTR_manip_keyframe":
+        elif directive == "ATTR_manip_wheel":
+            if self.current_manipulator != None:
+                self.current_manipulator.wheel_delta = float(args[0])
+        # applies only to DRAG_AXIS (spec) and DRAG_ROTATE (code)
+        elif directive == "ATTR_axis_detented":
+            if self.current_manipulator == None:
+                logger.warn(f"ATTR_axis_detented requires an existing ATTR_manip_drag_axis or ATTR_manip_drag_rotate")
+            elif self.current_manipulator.type == MANIP_DRAG_AXIS:
+                # change the type
+                self.current_manipulator.type = MANIP_DRAG_AXIS_DETENT
+            elif self.current_manipulator.type == MANIP_DRAG_ROTATE:
+                # change the type
+                self.current_manipulator.type = MANIP_DRAG_ROTATE_DETENT
+            else:
+                logger.warn(f"ATTR_axis_detented can only be applied to an ATTR_manip_drag_axis or ATTR_manip_drag_rotate")
+
+            # now apply the values
+            self.current_manipulator.dx = float(args[0])
+            self.current_manipulator.dy = float(args[1])
+            self.current_manipulator.dz = float(args[2])
+            self.current_manipulator.v1_min = float(args[3])
+            self.current_manipulator.v1_max = float(args[4])
+            self.current_manipulator.dataref1 = args[5]
+        # applies only to DRAG_AXIS (spec) and DRAG_ROTATE (code)
+        elif directive == "ATTR_axis_detent_range":
+            if self.current_manipulator != None and (
+                    self.current_manipulator.type == MANIP_DRAG_AXIS_DETENT or
+                    self.current_manipulator.type == MANIP_DRAG_ROTATE_DETENT):
+                # apply the values
+                self.current_manipulator.detents.append((float(args[0]), float(args[1]), float(args[2])))
+            else:
+                logger.warn(f"ATTR_axis_detent_range can only be applied to an ATTR_manip_drag_axis or ATTR_manip_drag_rotate after a ATTR_axis_detented")
         else:
             assert False, f"{directive} is not supported yet"
 
