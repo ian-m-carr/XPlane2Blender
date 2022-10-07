@@ -32,6 +32,7 @@ from typing import (
 
 import bmesh
 import bpy
+from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
 from mathutils import Euler, Matrix, Quaternion, Vector
 
 from io_xplane2blender.tests import test_creation_helpers
@@ -45,6 +46,8 @@ from io_xplane2blender.xplane_constants import (
     ANIM_TYPE_SHOW,
     ANIM_TYPE_TRANSFORM,
     PRECISION_KEYFRAME,
+    MANIP_COMMAND,
+    MANIP_CURSOR_HAND
 )
 from io_xplane2blender.xplane_helpers import (
     ExportableRoot,
@@ -56,6 +59,42 @@ from io_xplane2blender.xplane_helpers import (
     vec_x_to_b,
 )
 
+@dataclass
+class Attr_light_level:
+    v1: float
+    v2: float
+    path: str
+
+@dataclass
+class Attr_manip:
+    # axis_detent_ranges: collection ???
+    type: str = ""
+    tooltip: str = ""
+    cursor: str = ""
+    dx: float = 0.0
+    dy: float = 0.0
+    dz: float = 0.0
+    v1: float = 0.0
+    v2: float = 0.0
+    v1_min: float = 0.0
+    v1_max: float = 0.0
+    v2_min: float = 0.0
+    v2_max: float = 0.0
+    v_down: float = 0.0
+    v_up: float = 0.0
+    v_hold: float = 0.0
+    v_on: float = 0.0
+    v_off: float = 0.0
+    command: str = ""
+    positive_command: str = ""
+    negative_command: str = ""
+    dataref1: str = ""
+    dataref2: str = ""
+    step: float = 0.0
+    click_step: float = 0.0
+    hold_step: float = 0.0
+    wheel_delta: float = 0.0
+    exp: float = 1.0
 
 @dataclass
 class IntermediateDataref:
@@ -267,7 +306,10 @@ class IntermediateDatablock:
     bins: Tuple[bool, bool, bool, bool] = field(
         default_factory=lambda: (False, False, False, False)
     )
-	
+
+    attr_light_level: Attr_light_level = None
+    manipulator: Attr_manip = None
+
     def merge_verts(self, me) -> bpy.types.Mesh:
         # if the remove_doubles option is requested in the scene properties
         if bpy.context.scene.xplane.remove_doubles:
@@ -455,14 +497,6 @@ class _AnimIntermediateStackEntry:
     animation: IntermediateAnimation
     intermediate_datablock: Optional[IntermediateDatablock]
 
-
-@dataclass
-class Attr_light_level:
-    v1: float
-    v2: float
-    path: str
-
-
 class ImpCommandBuilder:
     def __init__(self, filepath: Path):
         self.root_collection = test_creation_helpers.create_datablock_collection(
@@ -489,7 +523,7 @@ class ImpCommandBuilder:
             count=None,
             transform_animation=None,
             show_hide_animations=[],
-            bake_matrix=Matrix.Identity(4),
+            bake_matrix=Matrix.Identity(4)
         )
 
         # --- LODS -------------------------------------------------------------
@@ -508,8 +542,9 @@ class ImpCommandBuilder:
         self._bake_matrix_stack: Deque[Matrix] = collections.deque((Matrix(),))
         # ---------------------------------------------------------------------
 
-        self.attr_light_level = None
-        self.material_name = "Material"
+        self.attr_light_level: Attr_light_level = None
+        self.material_name: str = "Material"
+        self.current_manipulator: Attr_manip = None
 
     def build_cmd(
         self, directive: str, *args: List[Union[float, int, str]], name_hint: str = ""
@@ -587,6 +622,9 @@ class ImpCommandBuilder:
 
             if self.attr_light_level != None:
                 intermediate_datablock.attr_light_level = self.attr_light_level
+
+            if self.current_manipulator != None:
+                intermediate_datablock.manipulator = self.current_manipulator
 
             self._blocks.append(intermediate_datablock)
             parent.children.append(intermediate_datablock)
@@ -766,10 +804,29 @@ class ImpCommandBuilder:
             elif r_r1 != r_r2 and r_v1 != r_v2:
                 # print("rot, case D - dynamic")
                 add_as_dynamic()
+        # ============================
+        # light_level state management
+        # ============================
         elif directive == "ATTR_light_level":
             self.attr_light_level = Attr_light_level(v1=args[0], v2=args[1], path=args[2])
         elif directive == "ATTR_light_level_reset":
             self.attr_light_level = None
+
+        # ============================
+        # Drawing state management
+        # ============================
+
+        # =================================
+        # Camera collision state management
+        # =================================
+
+        # =============
+        # MANIPULATORS
+        # =============
+        elif directive == "ATTR_manip_none":
+            self.current_manipulator = None
+        elif directive == "ATTR_manip_command":
+            self.current_manipulator = Attr_manip(type = MANIP_COMMAND, cursor=args[0], command=args[1], tooltip=args[2])
         else:
             assert False, f"{directive} is not supported yet"
 
@@ -1249,13 +1306,42 @@ class ImpCommandBuilder:
                 for animation in out_block.show_hide_animations:
                     animation.apply_animation(ob)
 
-                try:
+                if out_block.attr_light_level != None:
                     ob.xplane.lightLevel_v1 = out_block.attr_light_level.v1
                     ob.xplane.lightLevel_v2 = out_block.attr_light_level.v2
                     ob.xplane.lightLevel_dataref = out_block.attr_light_level.path
                     ob.xplane.lightLevel = True
-                except AttributeError:
-                    pass
+
+                if out_block.manipulator != None:
+                    manip = out_block.manipulator
+                    ob.xplane.manip.enabled = True
+                    ob.xplane.manip.type = manip.type
+                    ob.xplane.manip.cursor = manip.cursor
+                    ob.xplane.manip.tooltip = manip.tooltip
+                    ob.xplane.manip.dx = manip.dx
+                    ob.xplane.manip.dy = manip.dy
+                    ob.xplane.manip.dz = manip.dz
+                    ob.xplane.manip.v1 = manip.v1
+                    ob.xplane.manip.v2 = manip.v2
+                    ob.xplane.manip.v1_min = manip.v1_min
+                    ob.xplane.manip.v1_max = manip.v1_max
+                    ob.xplane.manip.v2_min = manip.v2_min
+                    ob.xplane.manip.v2_max = manip.v2_max
+                    ob.xplane.manip.v_down = manip.v_down
+                    ob.xplane.manip.v_up = manip.v_up
+                    ob.xplane.manip.v_hold = manip.v_hold
+                    ob.xplane.manip.v_on = manip.v_on
+                    ob.xplane.manip.v_off = manip.v_off
+                    ob.xplane.manip.command = manip.command
+                    ob.xplane.manip.positive_command = manip.positive_command
+                    ob.xplane.manip.negative_command = manip.negative_command
+                    ob.xplane.manip.dataref1 = manip.dataref1
+                    ob.xplane.manip.dataref2 = manip.dataref2
+                    ob.xplane.manip.step = manip.step
+                    ob.xplane.manip.click_step = manip.click_step
+                    ob.xplane.manip.hold_step = manip.hold_step
+                    ob.xplane.manip.wheel_delta = manip.wheel_delta
+                    ob.xplane.manip.exp = manip.exp
 
         # end while for searching remaining blocks
         # TODO: Unit test, and what about a bunch of animations that get optimized out with not TRIS blocks?

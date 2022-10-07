@@ -276,6 +276,10 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             builder.build_cmd(
                 directive, dxyz, r1, r2, v1, v2, path, name_hint=name_hint
             )
+
+        # ============================
+        # light_level state management
+        # ============================
         elif directive == "ATTR_light_level":
             try:
                 v1 = float(components[0])
@@ -289,6 +293,87 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             )
         elif directive == "ATTR_light_level_reset":
             builder.build_cmd(directive)
+
+        # ============================
+        # Drawing state management
+        # ============================
+        elif directive == "ATTR_draw_disable":
+            logger.warn(f"STATE Directive {directive} is not implemented yet")
+        elif directive == "ATTR_draw_enable":
+            logger.warn(f"STATE Directive {directive} is not implemented yet")
+
+        # =================================
+        # Camera collision state management
+        # =================================
+        elif directive =="ATTR_solid_camera":
+            logger.warn(f"STATE Directive {directive} is not implemented yet")
+        elif directive == "ATTR_no_solid_camera":
+            logger.warn(f"STATE Directive {directive} is not implemented yet")
+
+        #=============
+        # MANIPULATORS
+        #=============
+        elif directive == "ATTR_manip_none":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_drag_xy":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_drag_axis":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_command":
+            cursor = components[0]
+            command = components[1]
+            tooltip = ' '.join(components[2:])
+            logger.info(f"Manipulator directive {directive}: {cursor}, {command}, {tooltip}")
+            builder.build_cmd(directive, cursor, command, tooltip)
+        elif directive == "ATTR_manip_command_axis":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_noop":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_push":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_radio":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_toggle":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_delta":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_wrap":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_drag_axis_pix":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_command_knob":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_command_knob2":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_command_switch_up_down":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_command_switch_up_down2":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_command_switch_left_right":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_command_switch_left_right2":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_axis_knob":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_axis_switch_up_down":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_axis_switch_left_right":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_drag_rotate":
+            logger.warn(f"Manipulator directive {directive} is not implemented yet")
+
+        # =====================
+        # MANIPULATOR MODIFIERS
+        # =====================
+        elif directive == "ATTR_manip_keyframe":
+            logger.warn(f"Manipulator modifier directive {directive} is not implemented yet")
+        elif directive == "ATTR_manip_wheel":
+            logger.warn(f"Manipulator modifier directive {directive} is not implemented yet")
+        elif directive == "ATTR_axis_detented":
+            logger.warn(f"Manipulator modifier directive {directive} is not implemented yet")
+        elif directive == "ATTR_axis_detent_range":
+            logger.warn(f"Manipulator modifier directive {directive} is not implemented yet")
+
         elif directive == "POINT_COUNTS":
             # handled
             try:
