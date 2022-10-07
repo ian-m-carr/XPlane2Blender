@@ -64,8 +64,10 @@ def main(argv=None) -> int:
     # Environment variables - in order for --addons to work, we need to have OUR folder
     # exist, and we need to have "addons/modules" simlink BACK to us to create the illusion
     # of the directory structure Blender expects.
-    enviro={"BLENDER_USER_SCRIPTS": os.path.dirname(os.path.realpath(__file__))}
-
+    #enviro={"BLENDER_USER_SCRIPTS": os.path.dirname(os.path.realpath(__file__))}
+    enviro=os.environ.copy()
+    enviro["BLENDER_USER_SCRIPTS"] = os.path.dirname(os.path.realpath(__file__))
+    
     # Run Blender, normalize output line endings because Windows is dumb
     out = subprocess.run(
         blender_args, universal_newlines=True, env=enviro
