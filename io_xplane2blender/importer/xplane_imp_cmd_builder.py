@@ -381,45 +381,42 @@ class IntermediateDatablock:
         me = bpy.data.meshes.new(self.name)
         me.from_pydata(py_vertices, [], py_faces)
 
-        if not me.validate(verbose=True):
-            # Thanks Dave Prue and their "Import X-Plane Object" addon for the API example
-            me.uv_layers.new()
+        if me.validate(verbose=True):
+            logger.error(f"Invalid Mesh for object '{self.name}' was corrected, check console for more")
 
-            for mesh_uv_loop, mesh_loop in zip(me.uv_layers[-1].data, me.loops):
-                mesh_uv_loop.uv = uvs[mesh_loop.vertex_index]
+        # Thanks Dave Prue and their "Import X-Plane Object" addon for the API example
+        me.uv_layers.new()
 
-            try:
-                # IMC for Blender 3+ this needs to use the new vertex_normals collection
-                # as the vertex.normal property became readonly
-                for i, vertex_normal in enumerate(me.vertex_normals):
-                    vertex_normal = normals[i]
-            except:
-                # if we can't find vertex_normals, try it the old way
-                for i, vertex in enumerate(me.vertices):
-                    vertex.normal = normals[i]
+        for mesh_uv_loop, mesh_loop in zip(me.uv_layers[-1].data, me.loops):
+            mesh_uv_loop.uv = uvs[mesh_loop.vertex_index]
 
-            me.calc_normals()
-            me.update(calc_edges=True)
+        try:
+            # IMC for Blender 3+ this needs to use the new vertex_normals collection
+            # as the vertex.normal property became readonly
+            for i, vertex_normal in enumerate(me.vertex_normals):
+                vertex_normal = normals[i]
+        except:
+            # if we can't find vertex_normals, try it the old way
+            for i, vertex in enumerate(me.vertices):
+                vertex.normal = normals[i]
 
-            # merge the nearby duplicate vertices
-            self.merge_verts(me)
+        me.calc_normals()
+        me.update(calc_edges=True)
 
-            ob = test_creation_helpers.create_datablock_mesh(
-                self.datablock_info,
-                mesh_src=me,
-                material_name="Material" if material_name == None else material_name
-            )
-            ob.xplane.override_lods = any(self.bins)
-            if ob.xplane.override_lods:
-                for i, enabled in enumerate(self.bins):
-                    ob.xplane.lod[i] = enabled
+        # merge the nearby duplicate vertices
+        self.merge_verts(me)
 
-            return ob
-        else:
-            logger.error(
-                f"Mesh was not valid, object '{self.name}' not made, check console for more"
-            )
-            raise ValueError
+        ob = test_creation_helpers.create_datablock_mesh(
+            self.datablock_info,
+            mesh_src=me,
+            material_name="Material" if material_name == None else material_name
+        )
+        ob.xplane.override_lods = any(self.bins)
+        if ob.xplane.override_lods:
+            for i, enabled in enumerate(self.bins):
+                ob.xplane.lod[i] = enabled
+
+        return ob
 
     @property
     def name(self) -> str:
