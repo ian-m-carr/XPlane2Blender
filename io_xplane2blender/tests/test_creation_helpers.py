@@ -682,6 +682,16 @@ def create_material(
             mat.node_tree.links.new(
                 tex_node.outputs["Color"], bsdf_node.inputs["Base Color"]
             )
+        else:
+            # we have no texture use the standard chess-board
+            mat.use_nodes = True
+            tex_node = mat.node_tree.nodes.new("ShaderNodeTexChecker")
+            bsdf_node = mat.node_tree.nodes["Principled BSDF"]
+
+            # TODO: We should make it nice and move it so it isn't overlapping
+            mat.node_tree.links.new(
+                tex_node.outputs["Color"], bsdf_node.inputs["Base Color"]
+            )
 
     return mat
 
