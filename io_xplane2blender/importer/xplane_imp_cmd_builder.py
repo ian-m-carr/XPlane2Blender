@@ -579,14 +579,14 @@ class ImpCommandBuilder:
                 name = self.material_name + "_SOLID"
                 # ensure the material exists and the properties are set up correctly
                 if (test_creation_helpers.get_material(name) == None):
-                    mat = test_creation_helpers.create_material(name)
+                    mat = test_creation_helpers.create_material(name, self.texture)
                     mat.xplane.draw = True
                     mat.xplane.solid_camera = True
             else:
                 name = self.material_name
                 # ensure the material exists and the properties are set up correctly
                 if (test_creation_helpers.get_material(name) == None):
-                    mat = test_creation_helpers.create_material(name)
+                    mat = test_creation_helpers.create_material(name, self.texture)
                     mat.xplane.draw = True
                     mat.xplane.solid_camera = False
         else:
@@ -594,14 +594,14 @@ class ImpCommandBuilder:
                 name = self.material_name + "_NO_DRAW_SOLID"
                 # ensure the material exists and the properties are set up correctly
                 if (test_creation_helpers.get_material(name) == None):
-                    mat = test_creation_helpers.create_material(name)
+                    mat = test_creation_helpers.create_material(name, self.texture)
                     mat.xplane.draw = False
                     mat.xplane.solid_camera = True
             else:
                 name = self.material_name + "_NO_DRAW"
                 # ensure the material exists and the properties are set up correctly
                 if (test_creation_helpers.get_material(name) == None):
-                    mat = test_creation_helpers.create_material(name)
+                    mat = test_creation_helpers.create_material(name, self.texture)
                     mat.xplane.draw = False
                     mat.xplane.solid_camera = False
         return name
