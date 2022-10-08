@@ -663,8 +663,27 @@ def create_material(
     if mat == None:
         mat = bpy.data.materials.new(material_name)
 
-    return mat
+        # only need to populate the texture if the material does not already exist
+        if texture_image:
+            mat.use_nodes = True
+            tex_node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+            if isinstance(texture_image, bpy.types.Image):
+                tex_node.image = texture_image
+            elif isinstance(texture_image, Path) or texture_image.endswith(
+                    (".png", ".dds")
+            ):
+                tex_node.image = create_datablock_image_from_disk(texture_image)
+            else:
+                tex_node.image = get_image(texture_image)
 
+            bsdf_node = mat.node_tree.nodes["Principled BSDF"]
+
+            # TODO: We should make it nice and move it so it isn't overlapping
+            mat.node_tree.links.new(
+                tex_node.outputs["Color"], bsdf_node.inputs["Base Color"]
+            )
+
+    return mat
 
 def create_material_default() -> bpy.types.Material:
     """
@@ -1063,33 +1082,13 @@ def set_material(
     Raises OSError if texture_image is a path and not a real image
     """
 
-    mat = create_material(material_name)
+    mat = create_material(material_name, texture_image)
     try:
         blender_object.material_slots[0].material = mat
         print("slot 0  %s to %s" % (blender_object.name, material_name))
     except IndexError:
         print("Appended %s to %s" % (blender_object.name, material_name))
         blender_object.data.materials.append(mat)
-
-    if texture_image:
-        mat.use_nodes = True
-        tex_node = mat.node_tree.nodes.new("ShaderNodeTexImage")
-        if isinstance(texture_image, bpy.types.Image):
-            tex_node.image = texture_image
-        elif isinstance(texture_image, Path) or texture_image.endswith(
-            (".png", ".dds")
-        ):
-            tex_node.image = create_datablock_image_from_disk(texture_image)
-        else:
-            tex_node.image = get_image(texture_image)
-
-        bsdf_node = mat.node_tree.nodes["Principled BSDF"]
-
-        # TODO: We should make it nice and move it so it isn't overlapping
-        mat.node_tree.links.new(
-            tex_node.outputs["Color"], bsdf_node.inputs["Base Color"]
-        )
-
 
 def set_parent(blender_object: bpy.types.Object, parent_info: ParentInfo) -> None:
     assert isinstance(blender_object, bpy.types.Object)
