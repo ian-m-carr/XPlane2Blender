@@ -392,6 +392,20 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             builder.build_cmd(directive)
         elif directive == "ATTR_cockpit_device":
             builder.build_cmd(directive, *components[0:4])
+
+        # ====================
+        # lights
+        # ====================
+        # elif directive == "LIGHTS":
+        elif directive== "LIGHT_NAMED":
+            builder.build_cmd(directive, components[0], vec_x_to_b(list(map(float, components[1:4]))))
+        #elif directive == "LIGHT_CUSTOM":
+        #    builder.build_cmd(directive, *components[0:12])
+        elif directive == "LIGHT_PARAM":
+            builder.build_cmd(directive, components[0], vec_x_to_b(list(map(float, components[1:4]))), ' '.join(components[4:]))
+        #elif directive == "LIGHT_SPILL_CUSTOM":
+        #    builder.build_cmd(directive, *components[0:12])
+
         elif directive == "POINT_COUNTS":
             # handled
             try:

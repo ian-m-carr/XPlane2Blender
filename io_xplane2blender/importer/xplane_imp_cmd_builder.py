@@ -71,6 +71,7 @@ from io_xplane2blender.xplane_constants import (
     MANIP_DRAG_AXIS_PIX,
     COCKPIT_FEATURE_PANEL,
     COCKPIT_FEATURE_DEVICE,
+    LIGHT_PARAM,
     MANIP_CURSOR_HAND
 )
 from io_xplane2blender.xplane_helpers import (
@@ -1002,41 +1003,41 @@ class ImpCommandBuilder:
         elif directive == "ATTR_manip_axis_knob":
             self.current_manipulator = Attr_manip(type=MANIP_AXIS_KNOB,
                                                   cursor=args[0],
-                                                  v1_min=float(args[1]), v1_max=float(args[2]),
+                                                  v1=float(args[1]), v2=float(args[2]),
                                                   click_step=float(args[3]), hold_step=float(args[4]),
                                                   dataref1=args[5],
                                                   tooltip=args[6])
         elif directive == "ATTR_manip_axis_switch_up_down":
             self.current_manipulator = Attr_manip(type=MANIP_AXIS_SWITCH_UP_DOWN,
                                                   cursor=args[0],
-                                                  v1_min=float(args[1]), v1_max=float(args[2]),
+                                                  v1=float(args[1]), v2=float(args[2]),
                                                   click_step=float(args[3]), hold_step=float(args[4]),
                                                   dataref1=args[5],
                                                   tooltip=args[6])
         elif directive == "ATTR_manip_axis_switch_left_right":
             self.current_manipulator = Attr_manip(type=MANIP_AXIS_SWITCH_LEFT_RIGHT,
                                                   cursor=args[0],
-                                                  v1_min=float(args[1]), v1_max=float(args[2]),
+                                                  v1=float(args[1]), v2=float(args[2]),
                                                   click_step=float(args[3]), hold_step=float(args[4]),
                                                   dataref1=args[5],
                                                   tooltip=args[6])
         elif directive == "ATTR_manip_drag_rotate":
-            self.current_manipulator = Attr_manip(type=MANIP_DRAG_ROTATE, cursor=args[0],
+            #self.current_manipulator = Attr_manip(type=MANIP_DRAG_ROTATE, cursor=args[0],
             #                                       x = args[1],
             #                                       y = args[2],
             #                                       z = args[3],
-                                                   dx = float(args[4]),
-                                                   dy = float(args[5]),
-                                                   dz = float(args[6]),
+            #                                       dx = float(args[4]),
+            #                                       dy = float(args[5]),
+            #                                       dz = float(args[6]),
             #                                       angle1 = args[7],
             #                                       angle2 = args[8],
             #                                       lift = args[10],
-                                                   v1_min=float(args[11]),
-                                                   v1_max=float(args[12]),
-                                                   v2_min=float(args[13]),
-                                                   dataref1=args[14],
-                                                   dataref2=args[15],
-                                                   tooltip=args[16]);
+            #                                       v1_min=float(args[11]),
+            #                                       v1_max=float(args[12]),
+            #                                       v2_min=float(args[13]),
+            #                                       dataref1=args[14],
+            #                                       dataref2=args[15],
+            #                                       tooltip=args[16]);
             logger.warn(F"Manipulator {directive} is not yet fully handled - check your model!")
 
         # =====================
@@ -1090,6 +1091,82 @@ class ImpCommandBuilder:
             self.cockpit_panel_tex = False
         elif directive == "ATTR_cockpit_device":
             self.cockpit_device = Attr_cockpit_device(name=args[0], bus=args[1], light_channel=int(args[2]), auto_adjust=args[3])
+
+        # ====================
+        # lights
+        # ====================
+        #elif directive == "LIGHTS":
+        elif directive== "LIGHT_NAMED":
+            name = args[0]
+            xyz1 = args[1]
+
+            if not self._anim_intermediate_stack:
+                parent: IntermediateDatablock = self.root_intermediate_datablock
+            else:
+                parent: IntermediateDatablock = self._anim_intermediate_stack[
+                    -1
+                ].intermediate_datablock
+
+            intermediate_datablock = IntermediateDatablock(
+                datablock_info=DatablockInfo(
+                    datablock_type="LIGHT",
+                    name=name_hint or self._next_object_name(),
+                    # How do we keep track of this
+                    parent_info=ParentInfo(parent.datablock_info.name),
+                    collection=self.parent_collection
+                ),
+                start_idx=0,
+                count=0,
+                transform_animation=None,
+                show_hide_animations=[],
+                bake_matrix=self._bake_matrix_stack[-1].copy() @ Matrix.Translation(xyz1),
+                children=[],
+                bins=tuple(self.current_bins)
+            )
+
+            intermediate_datablock.light_type = LIGHT_PARAM
+            intermediate_datablock.light_name = name
+
+            self._blocks.append(intermediate_datablock)
+            parent.children.append(intermediate_datablock)
+        #elif directive == "LIGHT_CUSTOM":
+        elif directive == "LIGHT_PARAM":
+            name = args[0]
+            xyz1 = args[1]
+            params = args[2]
+
+            if not self._anim_intermediate_stack:
+                parent: IntermediateDatablock = self.root_intermediate_datablock
+            else:
+                parent: IntermediateDatablock = self._anim_intermediate_stack[
+                    -1
+                ].intermediate_datablock
+
+            intermediate_datablock = IntermediateDatablock(
+                datablock_info=DatablockInfo(
+                    datablock_type="LIGHT",
+                    name=name_hint or self._next_object_name(),
+                    # How do we keep track of this
+                    parent_info=ParentInfo(parent.datablock_info.name),
+                    collection=self.parent_collection
+                ),
+                start_idx=0,
+                count=0,
+                transform_animation=None,
+                show_hide_animations=[],
+                bake_matrix=self._bake_matrix_stack[-1].copy() @ Matrix.Translation(xyz1),
+                children=[],
+                bins=tuple(self.current_bins)
+            )
+
+            intermediate_datablock.light_type = LIGHT_PARAM
+            intermediate_datablock.light_name = name
+            intermediate_datablock.light_params = params
+
+            self._blocks.append(intermediate_datablock)
+            parent.children.append(intermediate_datablock)
+        #elif directive == "LIGHT_SPILL_CUSTOM":
+
         else:
             assert False, f"{directive} is not supported yet"
 
@@ -1447,6 +1524,8 @@ class ImpCommandBuilder:
                 )
             elif intermediate_block_type == "MESH":
                 out_block = intermediate_block
+            elif intermediate_block_type == "LIGHT":
+                out_block = intermediate_block
 
             def fill_in_eulers(
                 block_to_fill: IntermediateDatablock,
@@ -1554,6 +1633,13 @@ class ImpCommandBuilder:
                         test_creation_helpers.set_material(
                             ob, out_block.material_name, texture_image=self.texture
                         )
+            elif out_block.datablock_type == "LIGHT":
+                ob = test_creation_helpers.create_datablock_light(out_block.datablock_info, "SPOT")
+                ob.data.xplane.type = out_block.light_type
+                ob.data.xplane.name = out_block.light_name
+                if out_block.light_params != None:
+                    ob.data.xplane.params = out_block.light_params
+
             if ob:
                 ob.matrix_local = out_block.bake_matrix.copy()
                 bpy.context.view_layer.update()
