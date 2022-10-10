@@ -92,7 +92,6 @@ class Attr_light_level:
 
 @dataclass
 class Attr_manip:
-    # axis_detent_ranges: collection ???
     type: str = ""
     tooltip: str = ""
     cursor: str = MANIP_CURSOR_HAND
@@ -120,7 +119,9 @@ class Attr_manip:
     hold_step: float = 0.0
     wheel_delta: float = 0.0
     exp: float = 1.0
-    detents = list()
+    # axis_detent_ranges: collection ???
+    detents: List[Tuple[float, float,float]] = field(default_factory=list)
+    xyz1: Vector = Vector()
 
 @dataclass
 class Attr_cockpit_device:
@@ -980,7 +981,8 @@ class ImpCommandBuilder:
                                                   dx=float(args[1]), step=float(args[2]),
                                                   exp=float(args[3]), v1=float(args[4]), v2=float(args[5]),
                                                   dataref1=args[6],
-                                                  tooltip=args[7])
+                                                  tooltip=args[7]
+                                                  )
         elif directive == "ATTR_manip_command_knob":
             self.current_manipulator = Attr_manip(type=MANIP_COMMAND_KNOB, cursor=args[0],
                                                   positive_command=args[1], negative_command=args[2], tooltip=args[3])
@@ -1022,22 +1024,21 @@ class ImpCommandBuilder:
                                                   dataref1=args[5],
                                                   tooltip=args[6])
         elif directive == "ATTR_manip_drag_rotate":
-            #self.current_manipulator = Attr_manip(type=MANIP_DRAG_ROTATE, cursor=args[0],
-            #                                       x = args[1],
-            #                                       y = args[2],
-            #                                       z = args[3],
-            #                                       dx = float(args[4]),
-            #                                       dy = float(args[5]),
-            #                                       dz = float(args[6]),
-            #                                       angle1 = args[7],
-            #                                       angle2 = args[8],
-            #                                       lift = args[10],
-            #                                       v1_min=float(args[11]),
-            #                                       v1_max=float(args[12]),
-            #                                       v2_min=float(args[13]),
-            #                                       dataref1=args[14],
-            #                                       dataref2=args[15],
-            #                                       tooltip=args[16]);
+            self.current_manipulator = Attr_manip(type=MANIP_DRAG_ROTATE, cursor=args[0],
+                                                  xyz1 = args[1],
+                                                  dx = float(args[2]),
+                                                  dy = float(args[3]),
+                                                  dz = float(args[4]),
+                                                  v1 = float(args[5]),
+                                                  v2 = float(args[6]),
+                                                  v_up = float(args[7]),
+                                                  v1_min=float(args[8]),
+                                                  v1_max=float(args[9]),
+                                                  v2_min=float(args[10]),
+                                                  v2_max=float(args[11]),
+                                                  dataref1=args[12],
+                                                  dataref2=args[13],
+                                                  tooltip=args[14])
             logger.warn(F"Manipulator {directive} is not yet fully handled - check your model!")
 
         # =====================
@@ -1069,13 +1070,22 @@ class ImpCommandBuilder:
             self.current_manipulator.dataref1 = args[5]
         # applies only to DRAG_AXIS (spec) and DRAG_ROTATE (code)
         elif directive == "ATTR_axis_detent_range":
-            if self.current_manipulator != None and (
-                    self.current_manipulator.type == MANIP_DRAG_AXIS_DETENT or
-                    self.current_manipulator.type == MANIP_DRAG_ROTATE_DETENT):
+            if self.current_manipulator != None:
+                # adding detents to a drag_axis or drag_rotate?
+                if self.current_manipulator.type == MANIP_DRAG_AXIS:
+                    self.current_manipulator.type = MANIP_DRAG_AXIS_DETENT
+                elif self.current_manipulator.type == MANIP_DRAG_ROTATE:
+                    self.current_manipulator.type = MANIP_DRAG_ROTATE_DETENT
+
                 # apply the values
-                self.current_manipulator.detents.append((float(args[0]), float(args[1]), float(args[2])))
+                if (self.current_manipulator.type == MANIP_DRAG_AXIS_DETENT or
+                    self.current_manipulator.type == MANIP_DRAG_ROTATE_DETENT):
+
+                    self.current_manipulator.detents.append((float(args[0]), float(args[1]), float(args[2])))
+                else:
+                    logger.warn(f"ATTR_axis_detent_range can only be applied to an ATTR_manip_drag_axis or ATTR_manip_drag_rotate which is detented")
             else:
-                logger.warn(f"ATTR_axis_detent_range can only be applied to an ATTR_manip_drag_axis or ATTR_manip_drag_rotate after a ATTR_axis_detented")
+                logger.warn(f"ATTR_axis_detent_range requires an active manipulator to apply to!")
 
         # =====================
         # cockpit attributes
@@ -1663,6 +1673,7 @@ class ImpCommandBuilder:
                 if out_block.manipulator != None:
                     manip = out_block.manipulator
                     ob.xplane.manip.enabled = True
+                    ob.xplane.manip.autodetect_datarefs = False
                     ob.xplane.manip.type = manip.type
                     ob.xplane.manip.cursor = manip.cursor
                     ob.xplane.manip.tooltip = manip.tooltip
@@ -1690,6 +1701,13 @@ class ImpCommandBuilder:
                     ob.xplane.manip.hold_step = manip.hold_step
                     ob.xplane.manip.wheel_delta = manip.wheel_delta
                     ob.xplane.manip.exp = manip.exp
+                    # add any detents
+                    for detent in manip.detents:
+                        ob.xplane.manip.axis_detent_ranges.add()
+                        ob.xplane.manip.axis_detent_ranges[-1].start = detent[0]
+                        ob.xplane.manip.axis_detent_ranges[-1].end = detent[1]
+                        ob.xplane.manip.axis_detent_ranges[-1].height = detent[2]
+
 
         # end while for searching remaining blocks
         # TODO: Unit test, and what about a bunch of animations that get optimized out with not TRIS blocks?
