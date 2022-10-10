@@ -85,6 +85,13 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
     root_col = test_creation_helpers.create_datablock_collection(
         pathlib.Path(filepath).stem
     )
+    # get the relative path to the imported file from the blend folder
+    if bpy.data.filepath:
+        # derive the path name relative to the blend file
+        relpath = Path(filepath).relative_to(Path(bpy.data.filepath).parent)
+        # remove the suffix and use as the export hint name
+        root_col.xplane.layer.name = str(relpath.with_suffix(""))
+
     root_col.xplane.is_exportable_collection = True
 
     pattern = re.compile("([^#]*)(#.*)?")
