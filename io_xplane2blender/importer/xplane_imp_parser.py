@@ -379,6 +379,19 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         elif directive == "ATTR_axis_detent_range":
             builder.build_cmd(directive, *components[0:3])
 
+        # =====================
+        # cockpit attributes
+        # =====================
+        elif directive == "ATTR_cockpit":
+            builder.build_cmd(directive) # on
+        elif directive == "ATTR_cockpit_lit_only":
+            builder.build_cmd(directive) # on
+        elif directive == "ATTR_cockpit_region":
+            logger.warn(f"Cockpit  modifier directive {directive} is not implemented yet")
+        elif directive == "ATTR_no_cockpit": # off
+            builder.build_cmd(directive)
+        elif directive == "ATTR_cockpit_device":
+            builder.build_cmd(directive, *components[0:4])
         elif directive == "POINT_COUNTS":
             # handled
             try:

@@ -69,6 +69,8 @@ from io_xplane2blender.xplane_constants import (
     MANIP_RADIO,
     MANIP_COMMAND_AXIS,
     MANIP_DRAG_AXIS_PIX,
+    COCKPIT_FEATURE_PANEL,
+    COCKPIT_FEATURE_DEVICE,
     MANIP_CURSOR_HAND
 )
 from io_xplane2blender.xplane_helpers import (
@@ -118,6 +120,13 @@ class Attr_manip:
     wheel_delta: float = 0.0
     exp: float = 1.0
     detents = list()
+
+@dataclass
+class Attr_cockpit_device:
+    name: str = ""
+    bus: int = ""
+    light_channel: int = 0
+    auto_adjust: int = 0
 
 @dataclass
 class IntermediateDataref:
@@ -566,12 +575,38 @@ class ImpCommandBuilder:
         self.material_name: str = "Material"
         self.current_manipulator: Attr_manip = None
 
+        self.cockpit_panel_tex: bool = False
+        self.cockpit_device: Attr_cockpit_device = None
+
         self.draw_enabled: bool = True
         self.solid_camera: bool = False
 
     def get_material_name(self) -> str:
         name:str = None
-        if self.draw_enabled:
+
+        if self.cockpit_device != None:
+            name = self.material_name + "_COCKPIT_" + self.cockpit_device.name
+            # ensure the material exists and the properties are set up correctly
+            if (test_creation_helpers.get_material(name) == None):
+                # use the checkerboard texture for this one
+                mat = test_creation_helpers.create_material(name, None)
+                mat.xplane.draw = True
+                mat.xplane.solid_camera = False
+                mat.xplane.cockpit_feature = COCKPIT_FEATURE_DEVICE
+                mat.xplane.device_name = self.cockpit_device.name
+                # TODO: encode the bus information
+                # mat.xplane.device_bus_{i}")
+                mat.xplane.device_lighting_channel = self.cockpit_device.light_channel
+                mat.xplane.device_auto_adjust = self.cockpit_device.auto_adjust
+        elif self.cockpit_panel_tex:
+            name = self.material_name + "_PANEL"
+            if (test_creation_helpers.get_material(name) == None):
+                # use the checkerboard texture for this one
+                mat = test_creation_helpers.create_material(name, None)
+                mat.xplane.draw = True
+                mat.xplane.solid_camera = False
+                mat.xplane.cockpit_feature = COCKPIT_FEATURE_PANEL
+        elif self.draw_enabled:
             if self.solid_camera:
                 name = self.material_name + "_SOLID"
                 # ensure the material exists and the properties are set up correctly
@@ -1040,6 +1075,21 @@ class ImpCommandBuilder:
                 self.current_manipulator.detents.append((float(args[0]), float(args[1]), float(args[2])))
             else:
                 logger.warn(f"ATTR_axis_detent_range can only be applied to an ATTR_manip_drag_axis or ATTR_manip_drag_rotate after a ATTR_axis_detented")
+
+        # =====================
+        # cockpit attributes
+        # =====================
+        elif directive == "ATTR_cockpit":
+            self.current_manipulator = None
+            self.cockpit_panel_tex = True
+        elif directive == "ATTR_cockpit_lit_only":
+            self.current_manipulator = None
+            self.cockpit_panel_tex = True
+        #elif directive == "ATTR_cockpit_region":
+        elif directive == "ATTR_no_cockpit":  # off
+            self.cockpit_panel_tex = False
+        elif directive == "ATTR_cockpit_device":
+            self.cockpit_device = Attr_cockpit_device(name=args[0], bus=args[1], light_channel=int(args[2]), auto_adjust=args[3])
         else:
             assert False, f"{directive} is not supported yet"
 
