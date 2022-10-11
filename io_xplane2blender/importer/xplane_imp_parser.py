@@ -372,7 +372,11 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         elif directive == "ATTR_manip_axis_switch_left_right":
             builder.build_cmd(directive, *components[0:6], ' '.join(components[6:]))
         elif directive == "ATTR_manip_drag_rotate":
-            builder.build_cmd(directive, components[0],  vec_x_to_b(list(map(float, components[1:4]))), *components[4:16], ' '.join(components[16:]))
+            builder.build_cmd(directive, components[0],
+                              vec_x_to_b(list(map(float, components[1:4]))),
+                              vec_x_to_b(list(map(float, components[4:7]))),
+                              *components[7:16],
+                              ' '.join(components[16:]))
 
         # =====================
         # MANIPULATOR MODIFIERS

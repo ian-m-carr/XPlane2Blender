@@ -95,6 +95,7 @@ class Attr_manip:
     type: str = ""
     tooltip: str = ""
     cursor: str = MANIP_CURSOR_HAND
+    xyz1: Vector = Vector()
     dx: float = 0.0
     dy: float = 0.0
     dz: float = 0.0
@@ -121,7 +122,6 @@ class Attr_manip:
     exp: float = 1.0
     # axis_detent_ranges: collection ???
     detents: List[Tuple[float, float,float]] = field(default_factory=list)
-    xyz1: Vector = Vector()
 
 @dataclass
 class Attr_cockpit_device:
@@ -640,7 +640,6 @@ class ImpCommandBuilder:
                     mat.xplane.solid_camera = False
         return name
 
-
     def build_cmd(self, directive: str, *args: List[Union[float, int, str]], name_hint: str = ""):
         """
         Given the directive and it's arguments, correctly handle each case.
@@ -679,85 +678,16 @@ class ImpCommandBuilder:
             empty.transform_animation = self._top_animation
             self._bake_matrix_stack[-1].identity()
 
-        if directive == "VT":
-            self.vt_table.vertices.append(VT(*args))
-        elif directive == "IDX":
-            self.vt_table.idxes.append(args[0])
-        elif directive == "IDX10":
-            # idx error etc
-            self.vt_table.idxes.extend(args)
-        elif directive == "TRIS":
-            start_idx = args[0]
-            count = args[1]
-            if not self._anim_intermediate_stack:
-                parent: IntermediateDatablock = self.root_intermediate_datablock
-            else:
-                parent: IntermediateDatablock = self._anim_intermediate_stack[
-                    -1
-                ].intermediate_datablock
-
-            intermediate_datablock = IntermediateDatablock(
-                datablock_info=DatablockInfo(
-                    datablock_type="MESH",
-                    name=name_hint or self._next_object_name(),
-                    # How do we keep track of this
-                    parent_info=ParentInfo(parent.datablock_info.name),
-                    collection=self.parent_collection,
-                ),
-                start_idx=start_idx,
-                count=count,
-                transform_animation=None,
-                show_hide_animations=[],
-                bake_matrix=self._bake_matrix_stack[-1].copy(),
-                children=[],
-                bins=tuple(self.current_bins),
-            )
-
-            # derive the mesh-name from the current draw and solid camera state variables
-            intermediate_datablock.material_name = self.get_material_name()
-
-            if self.attr_light_level != None:
-                intermediate_datablock.attr_light_level = self.attr_light_level
-
-            if self.current_manipulator != None:
-                intermediate_datablock.manipulator = self.current_manipulator
-
-            self._blocks.append(intermediate_datablock)
-            parent.children.append(intermediate_datablock)
-        elif directive == "ATTR_LOD":
-            near, far = args[:2]
-            self.parent_collection = test_creation_helpers.create_datablock_collection(
-                f"LOD_{near}_{far}", parent=self.root_collection
-            )
-            if self.lod_mode == None:
-                # TODO: X-Plane default?
-                self.lod_mode = "selective"
-            if not self.encountered_ranges:
-                self.current_bins = [True, False, False, False]
-            elif near == self.encountered_ranges[-1].far:
-                self.lod_mode = "selective"
-                # TODO: too many ranges bug
-                self.current_bins = [False, False, False, False]
-                self.current_bins[len(self.encountered_ranges)] = True
-            elif self.encountered_ranges[-1].near == 0:
-                self.lod_mode = "additive"
-                # TODO : too many ranges bug still
-                self.current_bins = ([True] * (len(self.encountered_ranges) + 1)) + (
-                    [False] * (4 - len(self.encountered_ranges) - 1)
-                )
-            assert len(self.current_bins) == 4, f"{self.current_bins}"
-            self.encountered_ranges.append(LODRange(near, far))
-
-        elif directive == "ANIM_begin":
+        def anim_begin():
             self._anim_count.append(0)
             self._bake_matrix_stack.append(self._bake_matrix_stack[-1].copy())
-        elif directive == "ANIM_end":
+
+        def anim_end():
             for i in range(self._anim_count.pop()):
                 self._anim_intermediate_stack.pop()
             self._bake_matrix_stack.pop()
-        elif directive == "ANIM_trans_begin":
-            dataref_path = args[0]
 
+        def anim_trans_begin(dataref_path: str):
             begin_new_frame()
             self._top_animation.xp_dataref = IntermediateDataref(
                 anim_type=ANIM_TYPE_TRANSFORM,
@@ -768,51 +698,19 @@ class ImpCommandBuilder:
                 location_values=[],
                 rotation_values=[],
             )
-        elif directive == "ANIM_trans_key":
-            value = args[0]
-            location = args[1]
-            self._top_animation.locations.append(location)
-            self._top_dataref.location_values.append(value)
-        elif directive == "ANIM_trans_end":
-            pass
-        elif directive in {"ANIM_show", "ANIM_hide"}:
-            v1, v2 = args[:2]
-            dataref_path = args[2]
+
+        def anim_show_hide(v1: float, v2: float, dataref_path: str):
             begin_new_frame()
             self._top_dataref.anim_type = directive.replace("ANIM_", "")
             self._top_dataref.path = dataref_path
             self._top_dataref.show_hide_v1 = v1
             self._top_dataref.show_hide_v2 = v2
-        elif directive == "ANIM_rotate_begin":
-            axis = args[0]
-            dataref_path = args[1]
-            axis.normalize()
 
-            self._last_axis = axis
-            begin_new_frame()
-            self._top_animation.xp_dataref = IntermediateDataref(
-                anim_type=ANIM_TYPE_TRANSFORM,
-                loop=0,
-                path=dataref_path,
-                show_hide_v1=0,
-                show_hide_v2=0,
-                location_values=[],
-                rotation_values=[],
-            )
-        elif directive == "ANIM_rotate_key":
-            value = args[0]
-            degrees = args[1]
-            self._top_animation.rotations[self._last_axis.freeze()].append(degrees)
-            self._top_dataref.rotation_values.append(value)
-        elif directive == "ANIM_rotate_end":
-            self._last_axis = None
-        elif directive == "ANIM_keyframe_loop":
-            loop = args[0]
-            self._top_dataref.loop = loop
-        elif directive == "ANIM_trans":
-            xyz1, xyz2 = args[0:2]
-            v1, v2 = args[2:4]
-            path = args[4]
+        def anim_trans_key(value: Vector, location: Vector):
+            self._top_animation.locations.append(location)
+            self._top_dataref.location_values.append(value)
+
+        def anim_trans(xyz1: Vector, xyz2: Vector, v1: float, v2: float, path: str):
             r_xyz1, r_xyz2 = (
                 round_vec(xyz, PRECISION_KEYFRAME) for xyz in [xyz1, xyz2]
             )
@@ -827,9 +725,7 @@ class ImpCommandBuilder:
 
             if r_xyz1 == r_xyz2 and r_v1 == r_v2:
                 # print("trans, case A - static")
-                self._bake_matrix_stack[-1] = self._bake_matrix_stack[
-                    -1
-                ] @ Matrix.Translation(xyz1)
+                self._bake_matrix_stack[-1] = self._bake_matrix_stack[-1] @ Matrix.Translation(xyz1)
             elif r_xyz1 == r_xyz2 and r_v1 != r_v2:
                 # print("trans, case B - as dynamic")
                 add_as_dynamic()
@@ -850,12 +746,29 @@ class ImpCommandBuilder:
                 # print("trans, case D - dynamic")
                 add_as_dynamic()
 
-        elif directive == "ANIM_rotate":
-            dxyz = args[0]
-            r1, r2 = args[1:3]
-            v1, v2 = args[3:5]
-            path = args[5]
+        def anim_rotate_begin(axis: Vector, dataref_path: str):
+            axis.normalize()
 
+            self._last_axis = axis
+            begin_new_frame()
+            self._top_animation.xp_dataref = IntermediateDataref(
+                anim_type=ANIM_TYPE_TRANSFORM,
+                loop=0,
+                path=dataref_path,
+                show_hide_v1=0,
+                show_hide_v2=0,
+                location_values=[],
+                rotation_values=[],
+            )
+
+        def anim_rotate_key(value: float, degrees: float):
+            self._top_animation.rotations[self._last_axis.freeze()].append(degrees)
+            self._top_dataref.rotation_values.append(value)
+
+        def anim_rotate_end():
+            self._last_axis = None
+
+        def anim_rotate(dxyz: Vector, r1:float, r2:float, v1:float, v2:float, path: str):
             dxyz.normalize()
             r_r1, r_r2 = (round(r, PRECISION_KEYFRAME) for r in [r1, r2])
             r_v1, r_v2 = (round(v, PRECISION_KEYFRAME) for v in [v1, v2])
@@ -900,6 +813,169 @@ class ImpCommandBuilder:
             elif r_r1 != r_r2 and r_v1 != r_v2:
                 # print("rot, case D - dynamic")
                 add_as_dynamic()
+
+        def tris(start_idx: int, count: int, obj_name: str, transform_override: Vector = None):
+            if not self._anim_intermediate_stack:
+                parent: IntermediateDatablock = self.root_intermediate_datablock
+            else:
+                parent: IntermediateDatablock = self._anim_intermediate_stack[
+                    -1
+                ].intermediate_datablock
+
+            mat = self._bake_matrix_stack[-1].copy()
+            if transform_override != None:
+                mat = mat @ Matrix.Translation(transform_override)
+
+            intermediate_datablock = IntermediateDatablock(
+                datablock_info=DatablockInfo(
+                    datablock_type="MESH",
+                    name=obj_name,
+                    # How do we keep track of this
+                    parent_info=ParentInfo(parent.datablock_info.name),
+                    collection=self.parent_collection,
+                ),
+                start_idx=start_idx,
+                count=count,
+                transform_animation=None,
+                show_hide_animations=[],
+                bake_matrix=mat,
+                children=[],
+                bins=tuple(self.current_bins),
+            )
+
+            # derive the mesh-name from the current draw and solid camera state variables
+            intermediate_datablock.material_name = self.get_material_name()
+
+            if self.attr_light_level != None:
+                intermediate_datablock.attr_light_level = self.attr_light_level
+
+            if self.current_manipulator != None:
+                intermediate_datablock.manipulator = self.current_manipulator
+
+            self._blocks.append(intermediate_datablock)
+            parent.children.append(intermediate_datablock)
+
+        def fix_drag_rotate_missing_anim(xyz1: Vector, dxyz: Vector, dataref_path: str, v1_min: float, v1_max:float,
+                                         angle1: float, angle2: float, start_idx: int, count: int, obj_name:str):
+            # ANIM_begin
+            anim_begin()
+            # 	ANIM_trans	-0.15350001	0.25909999	2.5235	-0.15350001	0.25909999	2.5235
+            anim_trans(xyz1, xyz1, 0, 0, None)
+            # 	ANIM_rotate_begin	1	0	-0	sim/cockpit2/controls/elevator_trim
+            anim_rotate_begin(dxyz, dataref_path)
+            # 	ANIM_rotate_key	1	0
+            anim_rotate_key(v1_min, angle1)
+            # 	ANIM_rotate_key	-1	-600.00026
+            anim_rotate_key(v1_max, angle2)
+            # 	ANIM_rotate_end
+            anim_rotate_end()
+            # 		ATTR_draw_disable
+            # 		ATTR_manip_drag_rotate	hand	-0.15350001	0.25909999	2.5235	1.000	0.000	-0.000	0.000	-600.000	0.000	1.000	-1.000	0.000	0.000	sim/cockpit2/controls/elevator_trim	none	Elevator Trim Control
+            # 		TRIS	10290 120
+            tris(start_idx, count, obj_name, -xyz1)
+            # ANIM_end
+            anim_end()
+
+        if directive == "VT":
+            self.vt_table.vertices.append(VT(*args))
+        elif directive == "IDX":
+            self.vt_table.idxes.append(args[0])
+        elif directive == "IDX10":
+            # idx error etc
+            self.vt_table.idxes.extend(args)
+        elif directive == "TRIS":
+            start_idx = args[0]
+            count = args[1]
+            obj_name = name_hint or self._next_object_name()
+
+            mesh_created = False
+            # look for ATTR_manip_drag_rotate without an animation - animation fix need to be applied before we create the MESH block!
+            if self.current_manipulator != None and self.current_manipulator.type == MANIP_DRAG_ROTATE and len(self._anim_intermediate_stack) == 0:
+                logger.warn(f"object {obj_name} has a {MANIP_DRAG_ROTATE} manipulator but has no animation directives, this will not export!")
+                # we can only fix the single dataref case at the moment!
+                if self.current_manipulator.dataref2 == "none":
+                    logger.info(f"FIX APPLIED: object {obj_name}, {MANIP_DRAG_ROTATE} rotation animation fix")
+                    fix_drag_rotate_missing_anim(self.current_manipulator.xyz1,
+                                                 Vector((self.current_manipulator.dx, self.current_manipulator.dy, self.current_manipulator.dz)),
+                                                 self.current_manipulator.dataref1,
+                                                 self.current_manipulator.v1_min,
+                                                 self.current_manipulator.v1_max,
+                                                 self.current_manipulator.v1,
+                                                 self.current_manipulator.v2,
+                                                 start_idx, count, obj_name)
+                    # the fix has already created the mesh handling the TRIS block
+                    mesh_created = True
+
+            if not mesh_created:
+                tris(start_idx, count, obj_name)
+
+        elif directive == "ATTR_LOD":
+            near, far = args[:2]
+            self.parent_collection = test_creation_helpers.create_datablock_collection(
+                f"LOD_{near}_{far}", parent=self.root_collection
+            )
+            if self.lod_mode == None:
+                # TODO: X-Plane default?
+                self.lod_mode = "selective"
+            if not self.encountered_ranges:
+                self.current_bins = [True, False, False, False]
+            elif near == self.encountered_ranges[-1].far:
+                self.lod_mode = "selective"
+                # TODO: too many ranges bug
+                self.current_bins = [False, False, False, False]
+                self.current_bins[len(self.encountered_ranges)] = True
+            elif self.encountered_ranges[-1].near == 0:
+                self.lod_mode = "additive"
+                # TODO : too many ranges bug still
+                self.current_bins = ([True] * (len(self.encountered_ranges) + 1)) + (
+                    [False] * (4 - len(self.encountered_ranges) - 1)
+                )
+            assert len(self.current_bins) == 4, f"{self.current_bins}"
+            self.encountered_ranges.append(LODRange(near, far))
+
+        elif directive == "ANIM_begin":
+            anim_begin()
+        elif directive == "ANIM_end":
+            anim_end()
+        elif directive == "ANIM_trans_begin":
+            dataref_path = args[0]
+            anim_trans_begin(dataref_path)
+        elif directive == "ANIM_trans_key":
+            value = args[0]
+            location = args[1]
+            anim_trans_key(value, location)
+        elif directive == "ANIM_trans_end":
+            pass
+        elif directive in {"ANIM_show", "ANIM_hide"}:
+            v1, v2 = args[:2]
+            dataref_path = args[2]
+            anim_show_hide(v1, v2, dataref_path)
+        elif directive == "ANIM_rotate_begin":
+            axis = args[0]
+            dataref_path = args[1]
+            anim_rotate_begin(axis, dataref_path)
+        elif directive == "ANIM_rotate_key":
+            value = args[0]
+            degrees = args[1]
+            anim_rotate_key(value, degrees)
+        elif directive == "ANIM_rotate_end":
+            anim_rotate_end()
+        elif directive == "ANIM_keyframe_loop":
+            loop = args[0]
+            self._top_dataref.loop = loop
+        elif directive == "ANIM_trans":
+            xyz1, xyz2 = args[0:2]
+            v1, v2 = args[2:4]
+            path = args[4]
+            anim_trans(xyz1, xyz2, v1, v2, path)
+
+        elif directive == "ANIM_rotate":
+            dxyz = args[0]
+            r1, r2 = args[1:3]
+            v1, v2 = args[3:5]
+            path = args[5]
+            anim_rotate(dxyz, r1, r2, v1, v2, path)
+
         # ============================
         # light_level state management
         # ============================
@@ -1026,19 +1102,19 @@ class ImpCommandBuilder:
         elif directive == "ATTR_manip_drag_rotate":
             self.current_manipulator = Attr_manip(type=MANIP_DRAG_ROTATE, cursor=args[0],
                                                   xyz1 = args[1],
-                                                  dx = float(args[2]),
-                                                  dy = float(args[3]),
-                                                  dz = float(args[4]),
-                                                  v1 = float(args[5]),
-                                                  v2 = float(args[6]),
-                                                  v_up = float(args[7]),
-                                                  v1_min=float(args[8]),
-                                                  v1_max=float(args[9]),
-                                                  v2_min=float(args[10]),
-                                                  v2_max=float(args[11]),
-                                                  dataref1=args[12],
-                                                  dataref2=args[13],
-                                                  tooltip=args[14])
+                                                  dx = args[2][0],
+                                                  dy = args[2][1],
+                                                  dz = args[2][2],
+                                                  v1 = float(args[3]),
+                                                  v2 = float(args[4]),
+                                                  v_up = float(args[5]),
+                                                  v1_min=float(args[6]),
+                                                  v1_max=float(args[7]),
+                                                  v2_min=float(args[8]),
+                                                  v2_max=float(args[9]),
+                                                  dataref1=args[10],
+                                                  dataref2=args[11],
+                                                  tooltip=args[12])
             logger.warn(F"Manipulator {directive} is not yet fully handled - check your model!")
 
         # =====================
