@@ -407,6 +407,10 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     advanced_column.prop(scene.xplane, "smooth")
     advanced_column.prop(scene.xplane, "remove_doubles")
 
+    advanced_box.label(text="Import fixups)")
+    advanced_column = advanced_box.column()
+    advanced_column.prop(scene.xplane, "manip_rotate_missing_anim_fixup")
+
     if scene.xplane.debug:
         debug_box = advanced_column.box()
         debug_box.prop(scene.xplane, "log")

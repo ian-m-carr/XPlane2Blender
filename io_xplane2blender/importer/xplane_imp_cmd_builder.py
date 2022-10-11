@@ -893,7 +893,7 @@ class ImpCommandBuilder:
             if self.current_manipulator != None and self.current_manipulator.type == MANIP_DRAG_ROTATE and len(self._anim_intermediate_stack) == 0:
                 logger.warn(f"object {obj_name} has a {MANIP_DRAG_ROTATE} manipulator but has no animation directives, this will not export!")
                 # we can only fix the single dataref case at the moment!
-                if self.current_manipulator.dataref2 == "none":
+                if self.current_manipulator.dataref2 == "none" and bpy.context.scene.xplane.manip_rotate_missing_anim_fixup:
                     logger.info(f"FIX APPLIED: object {obj_name}, {MANIP_DRAG_ROTATE} rotation animation fix")
                     fix_drag_rotate_missing_anim(self.current_manipulator.xyz1,
                                                  Vector((self.current_manipulator.dx, self.current_manipulator.dy, self.current_manipulator.dz)),

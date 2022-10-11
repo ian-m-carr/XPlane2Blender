@@ -1566,14 +1566,23 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     )
 
     smooth: bpy.props.BoolProperty(
-        name="Smooth",
+        name="apply surface smoothing",
         description="If checked ALL imported mesh faces will be set to smooth rendering, adjusting the normals of the verts, this may require some manual flattening of subsets. choose based on the mix in your scene.",
         default=True
     )
 
     remove_doubles: bpy.props.BoolProperty(
-        name="Merge-Verts",
+        name="merge vertices",
         description="If checked All imported meshes will be run through the BMesh  bmesh.ops.remove_doubles to reduce the vert count if possible.",
+        default=True
+    )
+
+    manip_rotate_missing_anim_fixup: bpy.props.BoolProperty(
+        name="manip_rotate - missing anim fix",
+        description=""""manip_rotate cannot be exported without a rotation aninmation, this option enables a fixup
+        which derives an animation from the information present in the manip_rotation directive
+        this will then allow the directive to be reproduced in the exported file. NOTE: The fix can 
+        only be applied to a single dataref manip_rotate directive!""",
         default=True
     )
 
