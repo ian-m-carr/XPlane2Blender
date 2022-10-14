@@ -1176,7 +1176,7 @@ class ImpCommandBuilder:
         elif directive == "ATTR_no_cockpit":  # off
             self.cockpit_panel_tex = False
         elif directive == "ATTR_cockpit_device":
-            self.cockpit_device = Attr_cockpit_device(name=args[0], bus=args[1], light_channel=int(args[2]), auto_adjust=args[3])
+            self.cockpit_device = Attr_cockpit_device(name=args[0], bus=args[1], light_channel=int(args[2]), auto_adjust=int(args[3]))
 
         # ====================
         # lights
