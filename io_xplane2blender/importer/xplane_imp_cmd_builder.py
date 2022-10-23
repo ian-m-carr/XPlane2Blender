@@ -390,6 +390,10 @@ class IntermediateDatablock:
         ]
 
         me = bpy.data.meshes.new(self.name)
+        # check if the smoothing operation is requested in the scene properties
+        if bpy.context.scene.xplane.smooth:
+            me.use_auto_smooth = True
+
         me.from_pydata(py_vertices, [], py_faces)
 
         if me.validate(verbose=True):
@@ -401,18 +405,21 @@ class IntermediateDatablock:
         for mesh_uv_loop, mesh_loop in zip(me.uv_layers[-1].data, me.loops):
             mesh_uv_loop.uv = uvs[mesh_loop.vertex_index]
 
-        try:
+#        try:
             # IMC for Blender 3+ this needs to use the new vertex_normals collection
             # as the vertex.normal property became readonly
-            for i, vertex_normal in enumerate(me.vertex_normals):
-                vertex_normal = normals[i]
-        except:
+#            for i, vertex_normal in enumerate(me.vertex_normals):
+#                vertex_normal = normals[i]
+#        except:
             # if we can't find vertex_normals, try it the old way
-            for i, vertex in enumerate(me.vertices):
-                vertex.normal = normals[i]
+#            for i, vertex in enumerate(me.vertices):
+#                vertex.normal = normals[i]
 
-        me.calc_normals()
+#        me.calc_normals()
+
         me.update(calc_edges=True)
+
+        me.normals_split_custom_set_from_vertices(normals)
 
         # merge the nearby duplicate vertices
         self.merge_verts(me)
