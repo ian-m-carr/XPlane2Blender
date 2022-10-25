@@ -404,6 +404,7 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     advanced_box = layout.box()
     advanced_box.label(text="Advanced Settings (IMPORT)")
     advanced_column = advanced_box.column()
+    advanced_column.prop(scene.xplane, "auto_smooth")
     advanced_column.prop(scene.xplane, "smooth")
     advanced_column.prop(scene.xplane, "remove_doubles")
 

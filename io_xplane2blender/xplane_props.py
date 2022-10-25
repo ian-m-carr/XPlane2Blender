@@ -1565,8 +1565,14 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = True
     )
 
+    auto_smooth: bpy.props.BoolProperty(
+        name="apply mesh auto-smoothing",
+        description="If checked meshes are marked with auto-smooth rendering.",
+        default=False
+    )
+
     smooth: bpy.props.BoolProperty(
-        name="apply surface smoothing",
+        name="apply face smoothing",
         description="If checked ALL imported mesh faces will be set to smooth rendering, adjusting the normals of the verts, this may require some manual flattening of subsets. choose based on the mix in your scene.",
         default=True
     )
