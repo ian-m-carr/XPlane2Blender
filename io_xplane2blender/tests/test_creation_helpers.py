@@ -957,8 +957,11 @@ def set_animation_data(
             dataref_index += 1
 
     for kf_info in keyframe_infos:
-        bpy.context.scene.frame_current = kf_info.idx
-        bpy.context.view_layer.update() # Galvedro fix for the failure to import keyframe key data
+        # Galvedro fix 
+        #   bpy.context.scene.frame_current = kf_info.idx
+        #   bpy.context.view_layer.update() # Galvedro fix for the failure to import keyframe key data
+        # 4.3 fix need to call frame_set from 2.9.3 onward
+        bpy.context.scene.frame_set(kf_info.idx)
 
         if (
             kf_info.dataref_anim_type == ANIM_TYPE_SHOW
