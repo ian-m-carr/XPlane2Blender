@@ -1565,6 +1565,12 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = True
     )
 
+    x_forward: bpy.props.BoolProperty(
+        name = "+X is forward",
+        description = "If checked use the +X axis as the forward direction, default use the +Y axis",
+        default = False
+    )
+
     auto_smooth: bpy.props.BoolProperty(
         name="apply mesh auto-smoothing",
         description="If checked meshes are marked with auto-smooth rendering.",

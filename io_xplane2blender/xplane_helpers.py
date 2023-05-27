@@ -213,8 +213,14 @@ def round_vec(v: mathutils.Vector, ndigits: int) -> mathutils.Vector:
 
 
 def vec_b_to_x(v) -> mathutils.Vector:
-    """Converts Vector from Blender co-ords (X, Y, Z) to X-Plane as (X, Z, -Y)"""
-    return mathutils.Vector((v[0], v[2], -v[1]))
+    if bpy.context.scene.xplane.x_forward:
+        """Model is aligned along positive X as forward"""
+        """Converts Vector from Blender co-ords (X, Y, Z) to X-Plane as (-Y, Z, X)"""
+        return mathutils.Vector((-v[1], v[2], v[0]))
+    else:
+        """Model is aligned along positive Y as forward"""
+        """Converts Vector from Blender co-ords (X, Y, Z) to X-Plane as (X, Z, -Y)"""
+        return mathutils.Vector((v[0], v[2], -v[1]))
 
 
 def vec_x_to_b(v) -> mathutils.Vector:
