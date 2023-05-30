@@ -612,14 +612,24 @@ class XPlaneBone:
         if debug:
             o += indent + "# static translation\n"
 
-        o += indent + "ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
-            floatToStr(translation[0]),
-            floatToStr(translation[2]),
-            floatToStr(-translation[1]),
-            floatToStr(translation[0]),
-            floatToStr(translation[2]),
-            floatToStr(-translation[1]),
-        )
+        if bpy.context.scene.xplane.x_forward:
+            o += indent + "ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
+                floatToStr(translation[1]),
+                floatToStr(translation[2]),
+                floatToStr(translation[0]),
+                floatToStr(translation[1]),
+                floatToStr(translation[2]),
+                floatToStr(translation[0]),
+            )
+        else:
+            o += indent + "ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
+                floatToStr(translation[0]),
+                floatToStr(translation[2]),
+                floatToStr(-translation[1]),
+                floatToStr(translation[0]),
+                floatToStr(translation[2]),
+                floatToStr(-translation[1]),
+            )
 
         return o
 
