@@ -31,8 +31,7 @@ bl_info = {
     "category": "Import-Export",
 }
 
-if "" not in locals():
-
+if "xplane_ui" not in locals():
     from . import xplane_ui
     from . import xplane_props
     from . import xplane_import
@@ -44,6 +43,7 @@ if "" not in locals():
     from .xplane_utils import xplane_lights_txt_parser
     from .xplane_utils import xplane_wiper_gradient
 else:
+    print("Reloading X-Plane import/export")
     import importlib
     xplane_ui      = importlib.reload(xplane_ui)
     xplane_props   = importlib.reload(xplane_props)
