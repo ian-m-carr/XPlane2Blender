@@ -392,17 +392,22 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
             collection_layer_layout(non_exp_box, collection)
 
     advanced_box = layout.box()
+    advanced_box.use_property_split = True
     advanced_box.label(text="Advanced Settings (General)")
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "debug")
 
     advanced_box = layout.box()
+    advanced_box.use_property_split=True
     advanced_box.label(text="Advanced Settings (EXPORT)")
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "optimize")
     advanced_column.prop(scene.xplane, "x_forward")
 
+    advanced_column.prop(scene.xplane, "export_offset")
+
     advanced_box = layout.box()
+    advanced_box.use_property_split = True
     advanced_box.label(text="Advanced Settings (IMPORT)")
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "auto_smooth")

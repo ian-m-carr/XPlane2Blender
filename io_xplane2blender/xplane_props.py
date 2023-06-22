@@ -1595,6 +1595,13 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = False
     )
 
+    export_offset: bpy.props.FloatVectorProperty(
+        name = "Export offset",
+        description="Translation to apply on export",
+        subtype='XYZ',
+        default=(0,0,0)
+    )
+
     auto_smooth: bpy.props.BoolProperty(
         name="apply mesh auto-smoothing",
         description="If checked meshes are marked with auto-smooth rendering.",

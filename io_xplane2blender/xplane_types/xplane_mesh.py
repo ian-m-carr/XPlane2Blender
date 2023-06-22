@@ -80,6 +80,10 @@ class XPlaneMesh:
                 )
                 mesh.transform(xplaneObject.bakeMatrix)
 
+                # do we have an export offset?
+                if bpy.context.scene.xplane.export_offset:
+                    mesh.transform(mathutils.Matrix.Translation(bpy.context.scene.xplane.export_offset))
+
                 mesh.calc_normals_split()
                 mesh.calc_loop_triangles()
                 loop_triangles = mesh.loop_triangles
