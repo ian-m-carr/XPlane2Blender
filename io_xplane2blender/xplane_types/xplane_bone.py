@@ -516,6 +516,7 @@ class XPlaneBone:
         else:
             anchor_post_anim = my_anchor_bone.getPostAnimationMatrix()
             my_final_world = self.getBlenderWorldMatrix()
+
             # Find the relative matrix from the post-animation of our last animated bone to our final post animation transform.
             return anchor_post_anim.inverted_safe() @ my_final_world
 
@@ -614,12 +615,12 @@ class XPlaneBone:
 
         if bpy.context.scene.xplane.x_forward:
             o += indent + "ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
-                floatToStr(translation[1]),
+                floatToStr(-translation[1]),
                 floatToStr(translation[2]),
-                floatToStr(translation[0]),
-                floatToStr(translation[1]),
+                floatToStr(-translation[0]),
+                floatToStr(-translation[1]),
                 floatToStr(translation[2]),
-                floatToStr(translation[0]),
+                floatToStr(-translation[0]),
             )
         else:
             o += indent + "ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
