@@ -54,9 +54,9 @@ class XPlaneMesh:
         vertices_dct = {}
         for xplaneObject in xplaneObjects:
             if (
-                xplaneObject.type == "MESH"
-                and xplaneObject.xplaneBone
-                and not xplaneObject.export_animation_only
+                    xplaneObject.type == "MESH"
+                    and xplaneObject.xplaneBone
+                    and not xplaneObject.export_animation_only
             ):
                 xplaneObject.indices[0] = len(self.indices)
                 first_vertice_of_this_xplaneObject = len(self.vertices)
@@ -122,13 +122,25 @@ class XPlaneMesh:
                     for i in reversed(range(0, 3)):
                         index = tmp_face.indices[i]
                         vertex = xplane_helpers.vec_b_to_x(mesh.vertices[index].co)
-                        normal = xplane_helpers.vec_b_to_x(
-                            tmp_face.split_normals[i]
-                            if tmp_face.original_face.use_smooth
-                            else tmp_face.normal
-                        )
+
+                        # deal with mirroring
+                        scaling = xplaneObject.bakeMatrix.to_scale()
+
+                        face_normal = mathutils.Vector(tmp_face.split_normals[i] if tmp_face.original_face.use_smooth else tmp_face.normal)
+
+                        # flip the normal if we have a negative scaling, see this discussion: https://github.com/X-Plane/XPlane2Blender/issues/601
+                        '''
+                        if scaling.x < 0:
+                            face_normal.x = -face_normal.x
+                        if scaling.y < 0:
+                            face_normal.y = -face_normal.y
+                        if scaling.z < 0:
+                            face_normal.z = -face_normal.z
+                        '''
+
+                        normal = xplane_helpers.vec_b_to_x(face_normal)
                         uv = tmp_face.uvs[i]
-                        vt_entry = tuple(map(lambda n: int(n*10000), vertex[:] + normal[:] + uv[:]))
+                        vt_entry = tuple(map(lambda n: int(n * 10000), vertex[:] + normal[:] + uv[:]))
 
                         # Optimization Algorithm:
                         # Try to find a matching vt_entry's index in the mesh's index table
@@ -168,7 +180,7 @@ class XPlaneMesh:
         if debug:
             s = "".join(
                 f"VT\t"
-                f"{tab.join(floatToStr(component/10000) for component in line)}"
+                f"{tab.join(floatToStr(component / 10000) for component in line)}"
                 f"\t# {i}"
                 f"\n"
                 for i, line in enumerate(self.vertices)
@@ -177,7 +189,7 @@ class XPlaneMesh:
             return s
         else:
             s = "".join(
-                f"VT\t" f"{tab.join(floatToStr(component/10000) for component in line)}" f"\n"
+                f"VT\t" f"{tab.join(floatToStr(component / 10000) for component in line)}" f"\n"
                 for line in self.vertices
             )
             # print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
@@ -201,7 +213,7 @@ class XPlaneMesh:
         if len(self.indices) >= 10:
             o += "".join(
                 [
-                    s_idx10 % (*self.indices[i : i + 10],)
+                    s_idx10 % (*self.indices[i: i + 10],)
                     for i in range(0, partition_point - 1, 10)
                 ]
             )
