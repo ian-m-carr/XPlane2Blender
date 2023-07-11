@@ -6,6 +6,7 @@ from typing import List, Optional
 
 import bpy
 import mathutils
+import bmesh
 
 from io_xplane2blender import xplane_helpers
 
@@ -34,6 +35,19 @@ class XPlaneMesh:
         # int - Stores the current global vertex index.
         self.globalindex = 0
         self.debug = []
+
+    # Method: is_object_heirarchy_mirrored
+    # Is the belnder object or any of its parent objects mirrored (a scaling factor is negative)
+    def is_object_heirarchy_mirrored(self, blender_object):
+        # try to deal with mirroring!
+        scaling = blender_object.matrix_local.to_scale()
+
+        # flip the normal if we have a negative scaling, see this discussion: https://github.com/X-Plane/XPlane2Blender/issues/601
+        if scaling.x < 0 or scaling.y < 0 or scaling.z < 0:
+            return True
+
+        if blender_object.parent != None:
+            return self.is_object_mirrored(blender_object.parent)
 
     # Method: collectXPlaneObjects
     # Fills the <vertices> and <indices> from a list of <XPlaneObjects>.
@@ -71,13 +85,20 @@ class XPlaneMesh:
 
                 # create a copy of the xplaneObject mesh with modifiers applied and triangulated
                 evaluated_obj = xplaneObject.blenderObject.evaluated_get(dg)
-                mesh = evaluated_obj.to_mesh(
-                    preserve_all_data_layers=False, depsgraph=dg
-                )
+                mesh = evaluated_obj.to_mesh(preserve_all_data_layers=False, depsgraph=dg)
 
-                xplaneObject.bakeMatrix = (
-                    xplaneObject.xplaneBone.getBakeMatrixForAttached()
-                )
+                # try to deal with mirroring!
+                # flip the normal if we have a negative scaling in the object heirarchy,
+                # see this discussion: https://github.com/X-Plane/XPlane2Blender/issues/601
+                if self.is_object_heirarchy_mirrored(xplaneObject.blenderObject):
+                    bm = bmesh.new()  # create an empty BMesh
+                    bm.from_mesh(mesh)  # fill it in from the object mesh
+                    for face in bm.faces: # iterate the faces
+                        face.normal_flip() # flipping the normals
+                    bm.to_mesh(mesh) # put the result back
+                    bm.free() # cleanup
+
+                xplaneObject.bakeMatrix = (xplaneObject.xplaneBone.getBakeMatrixForAttached())
                 mesh.transform(xplaneObject.bakeMatrix)
 
                 mesh.calc_normals_split()
@@ -98,6 +119,7 @@ class XPlaneMesh:
                         "uvs",  # type: Tuple[mathutils.Vector, mathutils.Vector, mathutils.Vector]
                     ],
                 )
+
                 tmp_faces = []  # type: List[TempFace]
                 for tri in mesh.loop_triangles:
                     tmp_face = TempFace(
@@ -123,21 +145,7 @@ class XPlaneMesh:
                         index = tmp_face.indices[i]
                         vertex = xplane_helpers.vec_b_to_x(mesh.vertices[index].co)
 
-                        # deal with mirroring
-                        scaling = xplaneObject.bakeMatrix.to_scale()
-
                         face_normal = mathutils.Vector(tmp_face.split_normals[i] if tmp_face.original_face.use_smooth else tmp_face.normal)
-
-                        # flip the normal if we have a negative scaling, see this discussion: https://github.com/X-Plane/XPlane2Blender/issues/601
-                        '''
-                        if scaling.x < 0:
-                            face_normal.x = -face_normal.x
-                        if scaling.y < 0:
-                            face_normal.y = -face_normal.y
-                        if scaling.z < 0:
-                            face_normal.z = -face_normal.z
-                        '''
-
                         normal = xplane_helpers.vec_b_to_x(face_normal)
                         uv = tmp_face.uvs[i]
                         vt_entry = tuple(map(lambda n: int(n * 10000), vertex[:] + normal[:] + uv[:]))
