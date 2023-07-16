@@ -47,7 +47,7 @@ class XPlaneMesh:
             return True
 
         if blender_object.parent != None:
-            return self.is_object_mirrored(blender_object.parent)
+            return self.is_object_heirarchy_mirrored(blender_object.parent)
 
     # Method: collectXPlaneObjects
     # Fills the <vertices> and <indices> from a list of <XPlaneObjects>.
