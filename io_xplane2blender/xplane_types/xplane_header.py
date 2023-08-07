@@ -157,7 +157,7 @@ class XPlaneHeader:
         isAircraft = self.xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT
         isCockpit = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
         isInstance = (
-            self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY
+                self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY
         )
         isScenery = self.xplaneFile.options.export_type == EXPORT_TYPE_SCENERY
 
@@ -178,8 +178,8 @@ class XPlaneHeader:
 
         # draped layer groups
         if (
-            canHaveDraped
-            and self.xplaneFile.options.layer_group_draped != LAYER_GROUP_NONE
+                canHaveDraped
+                and self.xplaneFile.options.layer_group_draped != LAYER_GROUP_NONE
         ):
             self.attributes["ATTR_layer_group_draped"].setValue(
                 (
@@ -215,9 +215,7 @@ class XPlaneHeader:
         if self.xplaneFile.options.texture != "":
             try:
                 self.attributes["TEXTURE"].setValue(
-                    self.get_path_relative_to_dir(
-                        self.xplaneFile.options.texture, exportdir
-                    )
+                    self.get_path_relative_to_dir(self.xplaneFile.options.texture, exportdir)
                 )
             except (OSError, ValueError):
                 pass
@@ -225,9 +223,7 @@ class XPlaneHeader:
         if self.xplaneFile.options.texture_lit != "":
             try:
                 self.attributes["TEXTURE_LIT"].setValue(
-                    self.get_path_relative_to_dir(
-                        self.xplaneFile.options.texture_lit, exportdir
-                    )
+                    self.get_path_relative_to_dir(self.xplaneFile.options.texture_lit, exportdir)
                 )
             except (OSError, ValueError):
                 pass
@@ -235,20 +231,16 @@ class XPlaneHeader:
         if self.xplaneFile.options.texture_normal != "":
             try:
                 self.attributes["TEXTURE_NORMAL"].setValue(
-                    self.get_path_relative_to_dir(
-                        self.xplaneFile.options.texture_normal, exportdir
-                    )
+                    self.get_path_relative_to_dir(self.xplaneFile.options.texture_normal, exportdir)
                 )
             except (OSError, ValueError):
                 pass
-        
+
         if xplane_version >= 1200:
             if self.xplaneFile.options.texture_map_normal != "":
                 try:
                     self.attributes["TEXTURE_MAP normal"].setValue(
-                        self.get_path_relative_to_dir(
-                            self.xplaneFile.options.texture_map_normal, exportdir
-                        )
+                        self.get_path_relative_to_dir(self.xplaneFile.options.texture_map_normal, exportdir)
                     )
                 except (OSError, ValueError):
                     pass
@@ -256,9 +248,7 @@ class XPlaneHeader:
             if self.xplaneFile.options.texture_map_material_gloss != "":
                 try:
                     self.attributes["TEXTURE_MAP material_gloss"].setValue(
-                        self.get_path_relative_to_dir(
-                            self.xplaneFile.options.texture_map_material_gloss, exportdir
-                        )
+                        self.get_path_relative_to_dir(self.xplaneFile.options.texture_map_material_gloss, exportdir)
                     )
                 except (OSError, ValueError):
                     pass
@@ -266,9 +256,7 @@ class XPlaneHeader:
             if self.xplaneFile.options.texture_map_gloss != "":
                 try:
                     self.attributes["TEXTURE_MAP gloss"].setValue(
-                        self.get_path_relative_to_dir(
-                            self.xplaneFile.options.texture_map_gloss, exportdir
-                        )
+                        self.get_path_relative_to_dir(self.xplaneFile.options.texture_map_gloss, exportdir)
                     )
                 except (OSError, ValueError):
                     pass
@@ -306,7 +294,7 @@ class XPlaneHeader:
                     logger.warn(f"{filename}: Must have Wiper Texture to use Wipers")
 
             if (
-                xplane_version >= 1200 and (isAircraft or isCockpit) and has_rain_system
+                    xplane_version >= 1200 and (isAircraft or isCockpit) and has_rain_system
             ):
                 v = {
                     "RAIN_scale": rain_props.rain_scale
@@ -386,9 +374,9 @@ class XPlaneHeader:
                     self.xplaneFile.options.blend_glass
                 )
             elif (
-                self.xplaneFile.options.export_type
-                in {EXPORT_TYPE_INSTANCED_SCENERY, EXPORT_TYPE_SCENERY,}
-                and self.xplaneFile.options.blend_glass
+                    self.xplaneFile.options.export_type
+                    in {EXPORT_TYPE_INSTANCED_SCENERY, EXPORT_TYPE_SCENERY, }
+                    and self.xplaneFile.options.blend_glass
             ):
                 logger.error(
                     f"{self.xplaneFile.filename} can't use 'Blend Glass'. 'Blend Glass' is only for Aircraft and Cockpits"
@@ -452,7 +440,7 @@ class XPlaneHeader:
 
                 # draped specular
                 if xplane_version >= 1100 and effective_normal_metalness_draped(
-                    self.xplaneFile
+                        self.xplaneFile
                 ):
                     # draped specular
                     self.attributes["SPECULAR"].setValue(1.0)
@@ -512,14 +500,14 @@ class XPlaneHeader:
                 objs = self.xplaneFile.get_xplane_objects()
 
                 if not list(
-                    filter(
-                        lambda obj: obj.type == "EMPTY"
-                        and obj.blenderObject.xplane.special_empty_props.special_type
-                        == EMPTY_USAGE_EMITTER_PARTICLE
-                        or obj.blenderObject.xplane.special_empty_props.special_type
-                        == EMPTY_USAGE_EMITTER_SOUND,
-                        objs,
-                    )
+                        filter(
+                            lambda obj: obj.type == "EMPTY"
+                                        and obj.blenderObject.xplane.special_empty_props.special_type
+                                        == EMPTY_USAGE_EMITTER_PARTICLE
+                                        or obj.blenderObject.xplane.special_empty_props.special_type
+                                        == EMPTY_USAGE_EMITTER_SOUND,
+                            objs,
+                        )
                 ):
                     logger.warn(
                         "Particle System File {} is given, but no emitter objects are used".format(
@@ -564,8 +552,8 @@ class XPlaneHeader:
         # v1000
         if xplane_version >= 1000:
             if (
-                self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY
-                and self.xplaneFile.referenceMaterials[0]
+                    self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY
+                    and self.xplaneFile.referenceMaterials[0]
             ):
                 mat = self.xplaneFile.referenceMaterials[0]
 
@@ -623,7 +611,7 @@ class XPlaneHeader:
         # v1010
         if xplane_version >= 1010:
             if (
-                isInstance or isScenery
+                    isInstance or isScenery
             ):  # An exceptional case where a GLOBAL_ is allowed in Scenery type
                 mats = self.xplaneFile.getMaterials()
                 if mats and all(not mat.options.shadow_local for mat in mats):
@@ -705,7 +693,9 @@ class XPlaneHeader:
             # 7. Invalid paths are a validation error -> Path.resolve throws OSError
             # 8. Paths are minimal, "./path/tex.png" is "path/tex.png" -> Path.resolve
             # 10. Absolute paths are okay as long as we can make a relative path os.path.relpath
-            rel_path = os.path.relpath(res_path.resolve(), export_dir).replace(
+
+            # IMC path.resolve resolves symbolic links, ensure we treat the export dir the same way to make a true relative check!
+            rel_path = os.path.relpath(res_path.resolve(), Path(export_dir).resolve()).replace(
                 "\\", "/"
             )
         except OSError:
@@ -786,7 +776,7 @@ class XPlaneHeader:
                     if is_bool and values[0] == True:
                         o += "%s\n" % (attr.name)
                     elif (
-                        not is_bool
+                            not is_bool
                     ):  # True case already taken care of, don't care about False case - implicitly skipped
                         o += "%s\t%s\n" % (attr.name, attr.getValueAsString())
 
