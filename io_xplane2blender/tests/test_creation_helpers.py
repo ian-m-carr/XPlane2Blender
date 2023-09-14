@@ -647,10 +647,10 @@ def create_datablock_image_from_disk(filepath: Union[Path, str]) -> bpy.types.Im
     except (RuntimeError, ValueError):  # Couldn't load or make relative path
         raise OSError(f"Cannot load image {real_path}")
 
-
 def create_material(
     material_name: str,
     texture_image: Optional[Union[bpy.types.Image, Path, str]] = None,
+    colour: tuple[float] = None
 ):
     """
     Create a material and optionally give it a texture
@@ -682,6 +682,15 @@ def create_material(
             mat.node_tree.links.new(
                 tex_node.outputs["Color"], bsdf_node.inputs["Base Color"]
             )
+        elif colour != None:
+            # we have been given a colour use that!
+            mat.use_nodes = True
+            mat.blend_method = 'BLEND' # alpha blending
+
+            bsdf_node = mat.node_tree.nodes["Principled BSDF"]
+            bsdf_node.inputs['Base Color'].default_value = colour # the colour
+            bsdf_node.inputs['Alpha'].default_value = colour[3] # and set up the alpha
+
         else:
             # we have no texture use the standard chess-board
             mat.use_nodes = True
