@@ -177,6 +177,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
                 logger.warn(f"TEXTURE_LIT directive given but was empty")
             else:
                 if texture_path.exists() or pathlib.Path(texture_path).suffix == ".png" and texture_path.with_suffix(".dds").exists():
+                    builder.texture_lit = texture_path
                     builder.root_collection.xplane.layer.texture_lit = str(texture_path)
                 else:
                     logger.warn(f"TEXTURE_LIT File: '{str(texture_path)}' does not exist and no alternative dds found")
@@ -187,6 +188,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
                 logger.warn(f"TEXTURE_NORMAL directive given but was empty")
             else:
                 if texture_path.exists() or pathlib.Path(texture_path).suffix == ".png" and texture_path.with_suffix(".dds").exists():
+                    builder.texture_normal = texture_path
                     builder.root_collection.xplane.layer.texture_normal = str(texture_path)
                 else:
                     logger.warn(f"TEXTURE_NORMAL File: '{str(texture_path)}' does not exist and no alternative dds found")

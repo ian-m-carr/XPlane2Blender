@@ -547,8 +547,8 @@ class ImpCommandBuilder:
         self.parent_collection = self.root_collection
         self.vt_table = VTTable([], [])
         self.texture: Optional[Path] = None
-        # self.texture_lit:Optional[Path] = Path()
-        # self.texture_normal:Optiona[Path] = Path()
+        self.texture_lit:Optional[Path] = None
+        self.texture_normal:Optional[Path] = None
 
         # Although we don't end up making this, it is useful for tree problems
         self.root_intermediate_datablock = IntermediateDatablock(
@@ -598,7 +598,7 @@ class ImpCommandBuilder:
             # ensure the material exists and the properties are set up correctly
             if (test_creation_helpers.get_material(name) == None):
                 # use the checkerboard texture for this one
-                mat = test_creation_helpers.create_material(name, None)
+                mat = test_creation_helpers.create_material(name, None, None, None)
                 mat.xplane.draw = True
                 mat.xplane.solid_camera = False
                 mat.xplane.cockpit_feature = COCKPIT_FEATURE_DEVICE
@@ -611,7 +611,7 @@ class ImpCommandBuilder:
             name = self.material_name + "_PANEL"
             if (test_creation_helpers.get_material(name) == None):
                 # use the checkerboard texture for this one
-                mat = test_creation_helpers.create_material(name, None)
+                mat = test_creation_helpers.create_material(name, None, None, None)
                 mat.xplane.draw = True
                 mat.xplane.solid_camera = False
                 mat.xplane.cockpit_feature = COCKPIT_FEATURE_PANEL
@@ -620,14 +620,16 @@ class ImpCommandBuilder:
                 name = self.material_name + "_SOLID"
                 # ensure the material exists and the properties are set up correctly
                 if (test_creation_helpers.get_material(name) == None):
-                    mat = test_creation_helpers.create_material(name, self.texture)
+                    mat = test_creation_helpers.create_material(name, self.texture, self.texture_lit, self.texture_normal)
                     mat.xplane.draw = True
                     mat.xplane.solid_camera = True
             else:
                 name = self.material_name
                 # ensure the material exists and the properties are set up correctly
                 if (test_creation_helpers.get_material(name) == None):
-                    mat = test_creation_helpers.create_material(name, self.texture)
+                    normal_metalness = self.root_collection.xplane.layer.normal_metalness
+                    mat = test_creation_helpers.create_material(name, self.texture, self.texture_lit,
+                                                                self.texture_normal, normal_metalness)
                     mat.xplane.draw = True
                     mat.xplane.solid_camera = False
         else:
@@ -635,14 +637,16 @@ class ImpCommandBuilder:
                 name = self.material_name + "_NO_DRAW_SOLID"
                 # ensure the material exists and the properties are set up correctly
                 if (test_creation_helpers.get_material(name) == None):
-                    mat = test_creation_helpers.create_material(name, None, (0,0,1,0.3)) # transparent blue
+                    mat = test_creation_helpers.create_material(name, None, None, None,
+                                                                False,(0,0,1,0.3)) # transparent blue
                     mat.xplane.draw = False
                     mat.xplane.solid_camera = True
             else:
                 name = self.material_name + "_NO_DRAW"
                 # ensure the material exists and the properties are set up correctly
                 if (test_creation_helpers.get_material(name) == None):
-                    mat = test_creation_helpers.create_material(name, None, (1,0,0,0.3)) # transparent red
+                    mat = test_creation_helpers.create_material(name, None, None, None,
+                                                                False, (1,0,0,0.3)) # transparent red
                     mat.xplane.draw = False
                     mat.xplane.solid_camera = False
         return name

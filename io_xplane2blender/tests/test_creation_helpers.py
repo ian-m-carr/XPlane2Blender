@@ -73,7 +73,7 @@ class AxisAngle:
         return (self.angle, *self.axis)
 
     def to_euler(
-        self, order: str = "XYZ", euler_compat: Optional[Euler] = None
+            self, order: str = "XYZ", euler_compat: Optional[Euler] = None
     ) -> Euler:
         return self.to_quaternion().to_euler(order, euler_compat)
 
@@ -119,15 +119,15 @@ class DatablockInfo:
     """
 
     def __init__(
-        self,
-        datablock_type: str,
-        name: str,
-        parent_info: "ParentInfo" = None,
-        collection: Optional[Union[str, bpy.types.Collection]] = None,
-        location: Vector = Vector((0, 0, 0)),
-        rotation_mode: str = "XYZ",
-        rotation: Optional[RotationType] = None,
-        scale: Vector = Vector((1, 1, 1)),
+            self,
+            datablock_type: str,
+            name: str,
+            parent_info: "ParentInfo" = None,
+            collection: Optional[Union[str, bpy.types.Collection]] = None,
+            location: Vector = Vector((0, 0, 0)),
+            rotation_mode: str = "XYZ",
+            rotation: Optional[RotationType] = None,
+            scale: Vector = Vector((1, 1, 1)),
     ):
         self.datablock_type = datablock_type
         self.name = name
@@ -161,12 +161,12 @@ class DatablockInfo:
                 assert len(self.rotation) == 4
                 self.rotation_quaternion = rotation
             elif set(self.rotation_mode) == {"X", "Y", "Z"} and isinstance(
-                rotation, Euler
+                    rotation, Euler
             ):
                 assert len(self.rotation) == 3
                 self.rotation_euler = rotation
             elif set(self.rotation_mode) == {"X", "Y", "Z"} and isinstance(
-                rotation, tuple
+                    rotation, tuple
             ):
                 assert len(self.rotation) == 3
                 self.rotation_euler = Euler(map(math.radians, rotation), rotation_mode)
@@ -178,17 +178,17 @@ class DatablockInfo:
 
 class KeyframeInfo:
     def __init__(
-        self,
-        idx: int,
-        dataref_path: str,
-        dataref_value: Optional[float] = None,
-        dataref_show_hide_v1: Optional[float] = None,
-        dataref_show_hide_v2: Optional[float] = None,
-        dataref_loop: Optional[float] = None,
-        dataref_anim_type: str = xplane_constants.ANIM_TYPE_TRANSFORM,  # Must be xplane_constants.ANIM_TYPE_*
-        location: Optional[Vector] = None,
-        rotation_mode: str = "XYZ",
-        rotation: Optional[RotationType] = None,
+            self,
+            idx: int,
+            dataref_path: str,
+            dataref_value: Optional[float] = None,
+            dataref_show_hide_v1: Optional[float] = None,
+            dataref_show_hide_v2: Optional[float] = None,
+            dataref_loop: Optional[float] = None,
+            dataref_anim_type: str = xplane_constants.ANIM_TYPE_TRANSFORM,  # Must be xplane_constants.ANIM_TYPE_*
+            location: Optional[Vector] = None,
+            rotation_mode: str = "XYZ",
+            rotation: Optional[RotationType] = None,
     ):
         """
         Everything needed to automate setting Object Location/Rotation and
@@ -305,13 +305,13 @@ SHOW_ANIM_FAKE_T = (
 
 class ParentInfo:
     def __init__(
-        self,
-        parent: Optional[Union[bpy.types.Object, str]] = None,
-        parent_type: str = _OBJECT,  # Must be "ARMATURE", "BONE", or "OBJECT"
-        parent_bone: Optional[str] = None,
+            self,
+            parent: Optional[Union[bpy.types.Object, str]] = None,
+            parent_type: str = _OBJECT,  # Must be "ARMATURE", "BONE", or "OBJECT"
+            parent_bone: Optional[str] = None,
     ):
         assert (
-            parent_type == _ARMATURE or parent_type == _BONE or parent_type == _OBJECT
+                parent_type == _ARMATURE or parent_type == _BONE or parent_type == _OBJECT
         )
         if parent:
             assert isinstance(parent, (bpy.types.Object, str))
@@ -354,9 +354,9 @@ def create_bone(armature: bpy.types.Object, bone_info: BoneInfo) -> str:
 
 
 def create_datablock_collection(
-    name: str,
-    scene: Optional[Union[str, bpy.types.Scene]] = None,
-    parent: Optional[Union[bpy.types.Collection, str]] = None,
+        name: str,
+        scene: Optional[Union[str, bpy.types.Scene]] = None,
+        parent: Optional[Union[bpy.types.Collection, str]] = None,
 ) -> bpy.types.Collection:
     """
     If already existing, return it. If not, creates a collection
@@ -388,9 +388,9 @@ def create_datablock_collection(
 
 
 def create_datablock_armature(
-    info: DatablockInfo,
-    extra_bones: Optional[Union[List[BoneInfo], int]] = None,
-    bone_direction: Optional[Vector] = None,
+        info: DatablockInfo,
+        extra_bones: Optional[Union[List[BoneInfo], int]] = None,
+        bone_direction: Optional[Vector] = None,
 ) -> bpy.types.Object:
     """
     Creates an armature datablock with (optional) extra bones.
@@ -434,9 +434,9 @@ def create_datablock_armature(
 
     if extra_bones and bone_direction:
         assert (
-            isinstance(extra_bones, int)
-            and isinstance(bone_direction, Vector)
-            and bone_direction != Vector()
+                isinstance(extra_bones, int)
+                and isinstance(bone_direction, Vector)
+                and bone_direction != Vector()
         )
 
         head = Vector((0, 0, 0))
@@ -457,10 +457,10 @@ def create_datablock_armature(
 
 
 def create_datablock_empty(
-    info: DatablockInfo,
-    scene: Optional[Union[bpy.types.Scene, str]] = None,
-    empty_display_type: str = "PLAIN_AXES",
-    empty_display_size=1,
+        info: DatablockInfo,
+        scene: Optional[Union[bpy.types.Scene, str]] = None,
+        empty_display_type: str = "PLAIN_AXES",
+        empty_display_size=1,
 ) -> bpy.types.Object:
     """
     Creates a datablock empty and links it to a scene and collection.
@@ -495,10 +495,10 @@ class From_PyData:
 
 
 def create_datablock_mesh(
-    info: DatablockInfo,
-    mesh_src: Union[str, bpy.types.Mesh, From_PyData] = "cube",
-    material_name: Union[bpy.types.Material, str] = "Material",
-    scene: Optional[Union[bpy.types.Scene, str]] = None,
+        info: DatablockInfo,
+        mesh_src: Union[str, bpy.types.Mesh, From_PyData] = "cube",
+        material_name: Union[bpy.types.Material, str] = "Material",
+        scene: Optional[Union[bpy.types.Scene, str]] = None,
 ) -> bpy.types.Object:
     """
     Uses the bpy.ops.mesh.primitive_*_add ops to create an Object with given
@@ -535,7 +535,7 @@ def create_datablock_mesh(
             # set the mesh faces to smooth by default
             for face in ob.data.polygons:
                 face.use_smooth = True
-            
+
         return ob
 
     if isinstance(mesh_src, bpy.types.Mesh):
@@ -608,9 +608,9 @@ def create_datablock_mesh(
 
 
 def create_datablock_light(
-    info: DatablockInfo,
-    light_type: str,
-    scene: Optional[Union[bpy.types.Scene, str]] = None,
+        info: DatablockInfo,
+        light_type: str,
+        scene: Optional[Union[bpy.types.Scene, str]] = None,
 ):
     assert light_type in {"POINT", "SUN", "SPOT", "ARENA"}
     li = bpy.data.lights.new(info.name, light_type)
@@ -647,10 +647,14 @@ def create_datablock_image_from_disk(filepath: Union[Path, str]) -> bpy.types.Im
     except (RuntimeError, ValueError):  # Couldn't load or make relative path
         raise OSError(f"Cannot load image {real_path}")
 
+
 def create_material(
-    material_name: str,
-    texture_image: Optional[Union[bpy.types.Image, Path, str]] = None,
-    colour: tuple[float] = None
+        material_name: str,
+        texture_image: Optional[Union[bpy.types.Image, Path, str]] = None,
+        texture_lit_image: Optional[Union[bpy.types.Image, Path, str]] = None,
+        texture_nrm_image: Optional[Union[bpy.types.Image, Path, str]] = None,
+        normal_metalness: bool = True,
+        colour: tuple[float] = None
 ):
     """
     Create a material and optionally give it a texture
@@ -666,30 +670,92 @@ def create_material(
         # only need to populate the texture if the material does not already exist
         if texture_image:
             mat.use_nodes = True
+
+            # the albedo node
             tex_node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+            tex_node.location = -500, 300
             if isinstance(texture_image, bpy.types.Image):
                 tex_node.image = texture_image
-            elif isinstance(texture_image, Path) or texture_image.endswith(
-                    (".png", ".dds")
-            ):
+            elif isinstance(texture_image, Path) or texture_image.endswith((".png", ".dds")):
                 tex_node.image = create_datablock_image_from_disk(texture_image)
             else:
                 tex_node.image = get_image(texture_image)
 
             bsdf_node = mat.node_tree.nodes["Principled BSDF"]
 
-            # TODO: We should make it nice and move it so it isn't overlapping
-            mat.node_tree.links.new(
-                tex_node.outputs["Color"], bsdf_node.inputs["Base Color"]
-            )
+            mat.node_tree.links.new(tex_node.outputs["Color"], bsdf_node.inputs["Base Color"])
+            mat.node_tree.links.new(tex_node.outputs["Alpha"], bsdf_node.inputs["Alpha"])
+
+            # the normal image
+            if texture_nrm_image:
+                tex_node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+                tex_node.location = -1000, 0
+                if isinstance(texture_nrm_image, bpy.types.Image):
+                    tex_node.image = texture_nrm_image
+                elif isinstance(texture_nrm_image, Path) or texture_nrm_image.endswith((".png", ".dds")):
+                    tex_node.image = create_datablock_image_from_disk(texture_nrm_image)
+                else:
+                    tex_node.image = get_image(texture_nrm_image)
+
+                inv_node = mat.node_tree.nodes.new("ShaderNodeInvert")
+                inv_node.location = -700, -160
+                inv_node.inputs["Color"].default_value = (1,1,1,1)
+                mat.node_tree.links.new(tex_node.outputs["Alpha"], inv_node.inputs["Fac"])
+                mat.node_tree.links.new(inv_node.outputs["Color"], bsdf_node.inputs["Roughness"])
+
+                mat.node_tree.links.new(tex_node.outputs["Alpha"], inv_node.inputs["Fac"])
+
+
+                sep_col_node = mat.node_tree.nodes.new("ShaderNodeSeparateColor")
+                sep_col_node.location = -700, 0
+                sep_col_node.mode = 'RGB'
+
+                mat.node_tree.links.new(tex_node.outputs["Color"], sep_col_node.inputs["Color"])
+
+                comb_col_node = mat.node_tree.nodes.new("ShaderNodeCombineColor")
+                comb_col_node.location = -500, -200
+                comb_col_node.mode = 'RGB'
+                comb_col_node.inputs["Blue"].default_value = 0
+
+                # if normal_metallness is set then the blue channel of the normal is the bsdf metalic input
+                if normal_metalness:
+                    mat.node_tree.links.new(sep_col_node.outputs["Blue"], bsdf_node.inputs["Metallic"])
+
+                # red and green recombine
+                mat.node_tree.links.new(sep_col_node.outputs["Red"], comb_col_node.inputs["Red"])
+                mat.node_tree.links.new(sep_col_node.outputs["Green"], comb_col_node.inputs["Green"])
+
+                nml_map_node = mat.node_tree.nodes.new("ShaderNodeNormalMap")
+                nml_map_node.location = -300, -200
+                nml_map_node.space = 'TANGENT'
+                nml_map_node.uv_map = ""
+
+                # output of the combine color into the normal map and out to the bsdf
+                mat.node_tree.links.new(comb_col_node.outputs["Color"], nml_map_node.inputs["Color"])
+                mat.node_tree.links.new(nml_map_node.outputs["Normal"], bsdf_node.inputs["Normal"])
+
+            # the lit image
+            if texture_lit_image:
+                tex_node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+                tex_node.location = -500, -400
+                if isinstance(texture_lit_image, bpy.types.Image):
+                    tex_node.image = texture_lit_image
+                elif isinstance(texture_lit_image, Path) or texture_lit_image.endswith((".png", ".dds")):
+                    tex_node.image = create_datablock_image_from_disk(texture_lit_image)
+                else:
+                    tex_node.image = get_image(texture_lit_image)
+
+                # colour output becomes emission
+                mat.node_tree.links.new(tex_node.outputs["Color"], bsdf_node.inputs["Emission"])
+
         elif colour != None:
             # we have been given a colour use that!
             mat.use_nodes = True
-            mat.blend_method = 'BLEND' # alpha blending
+            mat.blend_method = 'BLEND'  # alpha blending
 
             bsdf_node = mat.node_tree.nodes["Principled BSDF"]
-            bsdf_node.inputs['Base Color'].default_value = colour # the colour
-            bsdf_node.inputs['Alpha'].default_value = colour[3] # and set up the alpha
+            bsdf_node.inputs['Base Color'].default_value = colour  # the colour
+            bsdf_node.inputs['Alpha'].default_value = colour[3]  # and set up the alpha
 
         else:
             # we have no texture use the standard chess-board
@@ -703,6 +769,7 @@ def create_material(
             )
 
     return mat
+
 
 def create_material_default() -> bpy.types.Material:
     """
@@ -832,8 +899,8 @@ def lookup_potential_root_from_name(name: str) -> PotentialRoot:
 
 
 def make_root_exportable(
-    potential_root: Union[PotentialRoot, str],
-    view_layer: Optional[bpy.types.ViewLayer] = None,
+        potential_root: Union[PotentialRoot, str],
+        view_layer: Optional[bpy.types.ViewLayer] = None,
 ) -> ExportableRoot:
     """
     Makes a root, as given or as found by it's name from collections then root objects,
@@ -866,10 +933,10 @@ def make_root_exportable(
 
 
 def make_root_unexportable(
-    exportable_root: Union[ExportableRoot, str],
-    view_layer: Optional[bpy.types.ViewLayer] = None,
-    hide_viewport: bool = False,
-    disable_viewport: bool = False,
+        exportable_root: Union[ExportableRoot, str],
+        view_layer: Optional[bpy.types.ViewLayer] = None,
+        hide_viewport: bool = False,
+        disable_viewport: bool = False,
 ) -> ExportableRoot:
     """
     Makes a root, unexportable, and optionally, some type of
@@ -897,9 +964,9 @@ def make_root_unexportable(
 
 
 def set_animation_data(
-    blender_struct: Union[bpy.types.Object, bpy.types.Bone, bpy.types.PoseBone],
-    keyframe_infos: List[KeyframeInfo],
-    parent_armature: [bpy.types.Armature] = None,
+        blender_struct: Union[bpy.types.Object, bpy.types.Bone, bpy.types.PoseBone],
+        keyframe_infos: List[KeyframeInfo],
+        parent_armature: [bpy.types.Armature] = None,
 ) -> None:
     """
     - blender_struct - A Blender light, mesh, armature, or bone to attach keyframes to. For a bone, pass it
@@ -918,8 +985,8 @@ def set_animation_data(
     assert len({kf_info.dataref_anim_type for kf_info in keyframe_infos}) == 1
 
     if (
-        keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_SHOW
-        or keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_HIDE
+            keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_SHOW
+            or keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_HIDE
     ):
         value = keyframe_infos[0].dataref_value
         value_1 = keyframe_infos[0].dataref_show_hide_v1
@@ -933,7 +1000,7 @@ def set_animation_data(
 
     struct_is_bone = False
     if isinstance(blender_struct, bpy.types.Bone) or isinstance(
-        blender_struct, bpy.types.PoseBone
+            blender_struct, bpy.types.PoseBone
     ):
         assert parent_armature is not None
         try:
@@ -973,8 +1040,8 @@ def set_animation_data(
         bpy.context.scene.frame_set(kf_info.idx)
 
         if (
-            kf_info.dataref_anim_type == ANIM_TYPE_SHOW
-            or kf_info.dataref_anim_type == ANIM_TYPE_HIDE
+                kf_info.dataref_anim_type == ANIM_TYPE_SHOW
+                or kf_info.dataref_anim_type == ANIM_TYPE_HIDE
         ):
             dataref_prop.show_hide_v1 = kf_info.dataref_show_hide_v1
             dataref_prop.show_hide_v2 = kf_info.dataref_show_hide_v2
@@ -1020,9 +1087,9 @@ def set_animation_data(
 
 
 def set_collection(
-    blender_object: bpy.types.Object,
-    collection: Union[bpy.types.Collection, str],
-    unlink_others: bool = True,
+        blender_object: bpy.types.Object,
+        collection: Union[bpy.types.Collection, str],
+        unlink_others: bool = True,
 ) -> None:
     """
     Links a datablock in collection. If collection is a string and does not exist, one will be made.
@@ -1035,9 +1102,9 @@ def set_collection(
 
     if unlink_others:
         for coll in (
-            coll
-            for coll in xplane_helpers.get_collections_in_scene(bpy.context.scene)
-            if blender_object.name in coll.objects
+                coll
+                for coll in xplane_helpers.get_collections_in_scene(bpy.context.scene)
+                if blender_object.name in coll.objects
         ):
             coll.objects.unlink(blender_object)
 
@@ -1051,10 +1118,10 @@ def set_collection(
 
 
 def set_manipulator_settings(
-    object_datablock: bpy.types.Object,
-    manip_type: str,
-    manip_enabled: bool = True,
-    manip_props: Optional[Dict[str, Any]] = None,
+        object_datablock: bpy.types.Object,
+        manip_type: str,
+        manip_enabled: bool = True,
+        manip_props: Optional[Dict[str, Any]] = None,
 ):
     """
     manip_type and manip_enabled, since they're the most common.
@@ -1092,9 +1159,9 @@ def set_manipulator_settings(
 
 
 def set_material(
-    blender_object: bpy.types.Object,
-    material_name: str = "Material",
-    texture_image: Optional[Union[bpy.types.Image, Path, str]] = None,
+        blender_object: bpy.types.Object,
+        material_name: str = "Material",
+        texture_image: Optional[Union[bpy.types.Image, Path, str]] = None,
 ):
     """
     Sets blender_object's 1st material slot to 'material_name'.
@@ -1113,6 +1180,7 @@ def set_material(
         print("Appended %s to %s" % (blender_object.name, material_name))
         blender_object.data.materials.append(mat)
 
+
 def set_parent(blender_object: bpy.types.Object, parent_info: ParentInfo) -> None:
     assert isinstance(blender_object, bpy.types.Object)
 
@@ -1125,15 +1193,15 @@ def set_parent(blender_object: bpy.types.Object, parent_info: ParentInfo) -> Non
 
     if parent_info.parent_type == _BONE:
         assert (
-            parent_info.parent.type == _ARMATURE
-            and parent_info.parent.data.bones.get(parent_info.parent_bone) is not None
+                parent_info.parent.type == _ARMATURE
+                and parent_info.parent.data.bones.get(parent_info.parent_bone) is not None
         )
 
         blender_object.parent_bone = parent_info.parent_bone
 
 
 def set_rotation(
-    blender_object: bpy.types.Object, rotation: RotationType, rotation_mode: str
+        blender_object: bpy.types.Object, rotation: RotationType, rotation_mode: str
 ) -> None:
     """
     Sets the rotation of a Blender Object and takes care of picking which
@@ -1159,8 +1227,8 @@ def set_rotation(
 
 
 def set_xplane_layer(
-    layer: Union[int, io_xplane2blender.xplane_props.XPlaneLayer],
-    layer_props: Dict[str, Any],
+        layer: Union[int, io_xplane2blender.xplane_props.XPlaneLayer],
+        layer_props: Dict[str, Any],
 ):
     assert isinstance(layer, int) or isinstance(
         layer, io_xplane2blender.xplane_props.XPlaneLayer
