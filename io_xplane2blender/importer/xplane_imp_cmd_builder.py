@@ -1049,7 +1049,7 @@ class ImpCommandBuilder:
                                                   tooltip=args[3])
         elif directive == "ATTR_manip_toggle":
             self.current_manipulator = Attr_manip(type=MANIP_TOGGLE, cursor=args[0],
-                                                  v1=float(args[1]), v2=float(args[2]),
+                                                  v_on=float(args[1]), v_off=float(args[2]),
                                                   dataref1=args[3], tooltip=args[4])
         elif directive == "ATTR_manip_delta":
             self.current_manipulator = Attr_manip(type=MANIP_DELTA, cursor=args[0],
