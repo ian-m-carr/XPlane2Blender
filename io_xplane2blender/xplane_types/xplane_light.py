@@ -736,4 +736,4 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
     @staticmethod
     def WIDTH_for_spill(spot_size: float):
-        return max(0.0,math.cos(spot_size * 0.5))
+        return max(0.0,math.tan(spot_size * 0.25))
