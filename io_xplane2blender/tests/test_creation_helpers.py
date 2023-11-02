@@ -1089,10 +1089,10 @@ def set_animation_data(
                     {"object": blender_struct}, index=dataref_index
                 )
             else:
-                bpy.context.temp_override(**{"object": blender_struct})
-                bpy.ops.object.add_xplane_dataref_keyframe(
-                    index=dataref_index
-                )
+                with bpy.context.temp_override(**{"object": blender_struct}):
+                    bpy.ops.object.add_xplane_dataref_keyframe(
+                        index=dataref_index
+                    )
 
 
 def set_collection(
