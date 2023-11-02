@@ -1081,9 +1081,18 @@ def set_animation_data(
             bpy.ops.bone.add_xplane_dataref_keyframe(index=dataref_index)
         else:
             bpy.context.view_layer.objects.active = blender_struct
-            bpy.ops.object.add_xplane_dataref_keyframe(
-                {"object": blender_struct}, index=dataref_index
-            )
+
+            # https://wiki.blender.org/wiki/Reference/Release_Notes/4.0/Python_API
+            # Remove the context override argument to bpy.ops in favor of context.temp_override(..)
+            if (4,0,0) > bpy.app.version:
+                bpy.ops.object.add_xplane_dataref_keyframe(
+                    {"object": blender_struct}, index=dataref_index
+                )
+            else:
+                bpy.context.temp_override(**{"object": blender_struct})
+                bpy.ops.object.add_xplane_dataref_keyframe(
+                    index=dataref_index
+                )
 
 
 def set_collection(
