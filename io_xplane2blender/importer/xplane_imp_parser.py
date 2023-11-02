@@ -248,7 +248,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             pass
         elif directive in {"ANIM_hide", "ANIM_show"}:
             v1, v2 = map(float, components[:2])
-            dataref_path = components[2]
+            dataref_path = components[2] if len(components) > 2 else ""
             builder.build_cmd(directive, v1, v2, dataref_path)
         elif directive == "ANIM_rotate_begin":
             axis = vec_x_to_b(list(map(float, components[0:3])))
