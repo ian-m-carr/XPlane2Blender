@@ -72,6 +72,7 @@ from io_xplane2blender.xplane_constants import (
     COCKPIT_FEATURE_PANEL,
     COCKPIT_FEATURE_DEVICE,
     LIGHT_PARAM,
+    LIGHT_AUTOMATIC,
     MANIP_CURSOR_HAND
 )
 from io_xplane2blender.xplane_helpers import (
@@ -1232,6 +1233,14 @@ class ImpCommandBuilder:
             xyz1 = args[1]
             params = args[2]
 
+            auto, rotation, colour, index, intensity, spot_size = self.extract_light_param_info(str(name), str(params))
+
+            if auto != None:
+                self._bake_matrix_stack[-1] = (
+                        self._bake_matrix_stack[-1]
+                        @ rotation.to_matrix().to_4x4()
+                )
+
             if not self._anim_intermediate_stack:
                 parent: IntermediateDatablock = self.root_intermediate_datablock
             else:
@@ -1259,6 +1268,12 @@ class ImpCommandBuilder:
             intermediate_datablock.light_type = LIGHT_PARAM
             intermediate_datablock.light_name = name
             intermediate_datablock.light_params = params
+
+            intermediate_datablock.light_auto = auto
+            intermediate_datablock.light_colour = colour
+            intermediate_datablock.light_index = index
+            intermediate_datablock.light_intensity = intensity
+            intermediate_datablock.light_spot_size = spot_size
 
             self._blocks.append(intermediate_datablock)
             parent.children.append(intermediate_datablock)
@@ -1732,10 +1747,19 @@ class ImpCommandBuilder:
                         )
             elif out_block.datablock_type == "LIGHT":
                 ob = test_creation_helpers.create_datablock_light(out_block.datablock_info, "SPOT")
-                ob.data.xplane.type = out_block.light_type
-                ob.data.xplane.name = out_block.light_name
-                if out_block.light_params != None:
-                    ob.data.xplane.params = out_block.light_params
+
+                if out_block.light_auto:
+                    ob.data.xplane.type = LIGHT_AUTOMATIC
+                    ob.data.color = out_block.light_colour
+                    ob.data.spot_size = out_block.light_spot_size
+                    ob.data.xplane.name = out_block.light_name
+                    ob.data.xplane.param_index = out_block.light_index
+                    ob.data.xplane.param_intensity = out_block.light_intensity
+                else:
+                    ob.data.xplane.type = out_block.light_type
+                    ob.data.xplane.name = out_block.light_name
+                    if out_block.light_params != None:
+                        ob.data.xplane.params = out_block.light_params
 
             if ob:
                 ob.matrix_local = out_block.bake_matrix.copy()
@@ -1805,6 +1829,72 @@ class ImpCommandBuilder:
 
         bpy.context.scene.frame_set(1)
         return {"FINISHED"}
+
+    def spot_size_for_billboard(self, width: float):
+        return self.spot_size_for_spill(width)
+
+        # following does not seem to be valid for a bb?
+        #assert spot_size != 0, "spot_size is 0, divide by zero error will occur"
+        #angle_from_center = spot_size / 2
+        #return math.cos(angle_from_center) / (math.cos(angle_from_center) - 1)
+        # would be:
+        # ang = acos(width/(width - 1))
+        # spot_size = ang*2
+
+    def spot_size_for_spill(self, width: float):
+        return max(0.0,math.atan(width) * 4.0)
+
+    def extract_light_param_info(self, name: str, params: str) -> tuple[bool, Quaternion, Vector, int, int, float]:
+        # all these have a parameter set with 9 entries:	"R,G,B,INDEX,INTENSITY,DX,DY,DZ,WIDTH"
+        xp12_light_params_bb = {
+            "airplane_landing_bb",
+            "airplane_taxi_bb",
+            "airplane_spot_bb",
+            "airplane_generic_bb",
+            "airplane_nav_bb",
+            "airplane_strobe_bb",
+            "airplane_beacon_bb",
+        }
+
+        xp12_light_params_pm = {
+            "airplane_landing_pm",
+            "airplane_taxi_pm",
+            "airplane_spot_pm",
+            "airplane_generic_pm",
+            "airplane_nav_pm",
+            "airplane_strobe_pm",
+            "airplane_beacon_pm"
+        }
+
+
+        if name in xp12_light_params_bb or name in xp12_light_params_pm:
+            param_list = params.split()
+            if len(param_list) != 9:
+                return False, Quaternion(), Vector(), 0, 0, 0.0
+
+            # rotation
+            up = Vector((0,-1,0))
+            dir = Vector((float(param_list[5]),float(param_list[6]),float(param_list[7])))
+            q = up.rotation_difference(dir)
+
+            # colour
+            col = Vector((float(param_list[0]),float(param_list[1]),float(param_list[2])))
+
+            # intensity (loose the cd)
+            intensity_string = param_list[4]
+            nonDigitIdx = [idx for idx, ch in enumerate(intensity_string) if not ch.isdigit()][0]
+            intensity = int(intensity_string[:nonDigitIdx])
+
+            # spot size
+            width = float(param_list[8])
+            spot_size = self.spot_size_for_billboard(width) if name in xp12_light_params_bb else self.spot_size_for_spill(width)
+
+            # rotation, colour, index, intensity, width
+            return True, q, col, int(param_list[3]), intensity, spot_size
+
+        # rotation, colour, index, intensity, width
+        return False, Quaternion(), Vector(), 0, 0, 0.0
+
 
     @property
     def _top_animation(self) -> Optional[IntermediateAnimation]:
