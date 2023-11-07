@@ -1235,11 +1235,12 @@ class ImpCommandBuilder:
 
             auto, rotation, colour, index, intensity, spot_size = self.extract_light_param_info(str(name), str(params))
 
+            # store the translation matrix
+            bake_matrix = self._bake_matrix_stack[-1].copy() @ Matrix.Translation(xyz1)
+
+            # if we are in Automatic V12 light mode then apply the rotation from the direction parameters
             if auto != None:
-                self._bake_matrix_stack[-1] = (
-                        self._bake_matrix_stack[-1]
-                        @ rotation.to_matrix().to_4x4()
-                )
+                bake_matrix = bake_matrix @ rotation.to_matrix().to_4x4()
 
             if not self._anim_intermediate_stack:
                 parent: IntermediateDatablock = self.root_intermediate_datablock
@@ -1260,7 +1261,7 @@ class ImpCommandBuilder:
                 count=0,
                 transform_animation=None,
                 show_hide_animations=[],
-                bake_matrix=self._bake_matrix_stack[-1].copy() @ Matrix.Translation(xyz1),
+                bake_matrix=bake_matrix,
                 children=[],
                 bins=tuple(self.current_bins)
             )
@@ -1269,6 +1270,7 @@ class ImpCommandBuilder:
             intermediate_datablock.light_name = name
             intermediate_datablock.light_params = params
 
+            # pass the V12 Automatic light parameters through the intermediate block
             intermediate_datablock.light_auto = auto
             intermediate_datablock.light_colour = colour
             intermediate_datablock.light_index = index
@@ -1873,9 +1875,9 @@ class ImpCommandBuilder:
                 return False, Quaternion(), Vector(), 0, 0, 0.0
 
             # rotation
-            up = Vector((0,-1,0))
+            down = Vector((0,0,-1)) # Z down
             dir = Vector((float(param_list[5]),float(param_list[6]),float(param_list[7])))
-            q = up.rotation_difference(dir)
+            q = down.rotation_difference(vec_x_to_b(dir)) # convert to blender coords
 
             # colour
             col = Vector((float(param_list[0]),float(param_list[1]),float(param_list[2])))
