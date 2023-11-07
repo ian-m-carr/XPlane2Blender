@@ -17,7 +17,6 @@ from ..xplane_config import getDebug
 from ..xplane_constants import *
 from ..xplane_helpers import floatToStr, logger, vec_b_to_x, vec_x_to_b
 
-
 @dataclass
 class _LightSpillCustomParams:
     r: float
@@ -737,3 +736,11 @@ class XPlaneLight(xplane_object.XPlaneObject):
     @staticmethod
     def WIDTH_for_spill(spot_size: float):
         return max(0.0,math.tan(spot_size * 0.25))
+
+    @staticmethod
+    def candela_from_watt_approx(power_watts: float):
+        return power_watts * LUMENS_PER_WATT / (4 * math.pi)
+
+    @staticmethod
+    def watt_from_candela_approx(intensity_candela: float):
+        return intensity_candela * 4 * math.pi / LUMENS_PER_WATT

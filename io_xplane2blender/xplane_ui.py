@@ -1005,6 +1005,15 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                                 5,
                             )
                     debug_box.row().label(text=f"Width: {WIDTH_val}")
+
+                has_intensity = "INTENSITY" in parsed_light.light_param_def
+                if has_intensity:
+                    debug_box.row().label(text=f"Approximate Blender/X-Plane conversions")
+                    debug_box.row().label(text=f"Power: {light_data.energy:.2f} W -> "
+                                               f"Intensity: {xplane_types.XPlaneLight.candela_from_watt_approx(light_data.energy):.2f} cd")
+                    debug_box.row().label(
+                        text=f"Intensity: {light_data.xplane.param_intensity:.2f} cd -> "
+                             f"Power: {xplane_types.XPlaneLight.watt_from_candela_approx(light_data.xplane.param_intensity):.2f} W")
                 # ---------------------------------------------------------
                 # try_param("param_index", "INDEX", "Dataref Index", n=0)
                 # try_param("param_freq", "FREQ", "Freq")

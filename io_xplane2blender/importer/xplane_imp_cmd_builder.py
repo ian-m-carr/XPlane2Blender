@@ -84,6 +84,7 @@ from io_xplane2blender.xplane_helpers import (
     vec_b_to_x,
     vec_x_to_b,
 )
+from io_xplane2blender.xplane_types.xplane_light import XPlaneLight
 
 @dataclass
 class Attr_light_level:
@@ -1277,6 +1278,8 @@ class ImpCommandBuilder:
             intermediate_datablock.light_intensity = intensity
             intermediate_datablock.light_spot_size = spot_size
 
+            intermediate_datablock.light_energy = XPlaneLight.watt_from_candela_approx(intensity)
+
             self._blocks.append(intermediate_datablock)
             parent.children.append(intermediate_datablock)
         #elif directive == "LIGHT_SPILL_CUSTOM":
@@ -1757,6 +1760,7 @@ class ImpCommandBuilder:
                     ob.data.xplane.name = out_block.light_name
                     ob.data.xplane.param_index = out_block.light_index
                     ob.data.xplane.param_intensity = out_block.light_intensity
+                    ob.data.energy = out_block.light_energy
                 else:
                     ob.data.xplane.type = out_block.light_type
                     ob.data.xplane.name = out_block.light_name

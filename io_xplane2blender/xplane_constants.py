@@ -273,3 +273,5 @@ LOGGER_LEVELS_ALL = (
 PANEL_COCKPIT = "cockpit"
 PANEL_COCKPIT_LIT_ONLY = "cockpit_lit_only"
 PANEL_COCKPIT_REGION = "cockpit_region"
+
+LUMENS_PER_WATT = 683
