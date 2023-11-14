@@ -746,7 +746,12 @@ def create_material(
                     tex_node.image = get_image(texture_lit_image)
 
                 # colour output becomes emission
-                mat.node_tree.links.new(tex_node.outputs["Color"], bsdf_node.inputs["Emission"])
+                # changes for Blender 4.0.0
+                # The Principled BSDF node has been revamped and now aligns more closely to Standard Surface and OpenPBR. Various sockets were renamed:
+                if (4, 0, 0) > bpy.app.version:
+                    mat.node_tree.links.new(tex_node.outputs["Color"], bsdf_node.inputs["Emission"])
+                else:
+                    mat.node_tree.links.new(tex_node.outputs["Color"], bsdf_node.inputs["Emission Color"])
 
         elif colour != None:
             # we have been given a colour use that!
