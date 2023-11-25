@@ -532,7 +532,15 @@ class XPlaneHeader:
 
         write_user_specular_values = True
 
-        if xplane_version >= 1100 and self.xplaneFile.referenceMaterials[0]:
+        if xplane_version >= 1200 and self.xplaneFile.options.global_specular_override:
+            # explicitly overidden in the export section
+            specular = self.xplaneFile.options.global_specular
+            self.attributes["GLOBAL_specular"].setValue(specular)
+            self.xplaneFile.commands.written[
+                "ATTR_shiny_rat"
+            ] = 1.0  # Here we are fooling ourselves
+            write_user_specular_values = False  # It will be skipped from now on
+        elif xplane_version >= 1100 and self.xplaneFile.referenceMaterials[0]:
             mat = self.xplaneFile.referenceMaterials[0]
             if effective_normal_metalness(self.xplaneFile):
                 self.attributes["GLOBAL_specular"].setValue(1.0)

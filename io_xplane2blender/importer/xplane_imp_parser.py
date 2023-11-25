@@ -199,6 +199,9 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         elif directive == "GLOBAL_luminance":
             builder.root_collection.xplane.layer.luminance_override = True
             builder.root_collection.xplane.layer.luminance = int(components[0])
+        elif directive == "GLOBAL_specular":
+            builder.root_collection.xplane.layer.global_specular_override = True
+            builder.root_collection.xplane.layer.global_specular = float(components[0])
         elif directive == "VT":
             components[:3] = vec_x_to_b(list(map(float, components[:3])))
             components[3:6] = vec_x_to_b(list(map(float, components[3:6])))

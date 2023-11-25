@@ -1194,6 +1194,20 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = False
     )
 
+    global_specular_override: bpy.props.BoolProperty(
+        name = "Override GLOBAL_specular",
+        description = "Override specular mulitplier for normal texture alpha channel",
+        default = False
+    )
+
+    global_specular: bpy.props.FloatProperty(
+        name="GLOBAL_specular multiplier",
+        description="The overriden specular multiplier for the normal texture alpha channel",
+        min=0.0,
+        max=100.0,
+        default=0.5,
+    )
+
     particle_system_file: bpy.props.StringProperty(
         name = "Particle System Definition File",
         description = "Relative file path to a .pss that defines particles",

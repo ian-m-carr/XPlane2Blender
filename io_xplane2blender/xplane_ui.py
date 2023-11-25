@@ -584,6 +584,11 @@ def layer_layout(
         row.active = layer_props.luminance_override
         row.prop(layer_props, "luminance_override", text="")
         row.prop(layer_props, "luminance")
+    if version >= 1200:
+        row = global_mat_box.row(align=True)
+        row.active = layer_props.global_specular_override
+        row.prop(layer_props, "global_specular_override", text="")
+        row.prop(layer_props, "global_specular")
     if version >= 1100:
         if layer_props.export_type in {
             EXPORT_TYPE_INSTANCED_SCENERY,
