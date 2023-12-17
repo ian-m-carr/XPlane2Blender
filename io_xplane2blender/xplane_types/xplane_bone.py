@@ -926,6 +926,7 @@ class XPlaneBone:
                     # no trailing content we are done
                     done = True
             else:
+                components.append(expr)
                 done = True
 
         return "".join(components), fully_expanded, failed_lookups
