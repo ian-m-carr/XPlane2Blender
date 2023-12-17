@@ -27,6 +27,7 @@ relationships, it cannot be assumed that the XPlaneBone Tree and Blender Hierarc
 """
 
 import math
+import re
 from typing import Dict, List, Optional, Tuple
 
 import bpy
@@ -710,7 +711,7 @@ class XPlaneBone:
         if debug:
             o += f"{indent}# translation keyframes\n"
 
-        o += f"{indent}ANIM_trans_begin\t{dataref}\n"
+        o += f"{indent}ANIM_trans_begin\t{self.expand_dataref_vars(dataref)}\n"
 
         for keyframe in keyframes:
             totalTrans += sum(map(abs, keyframe.location))
@@ -752,7 +753,7 @@ class XPlaneBone:
         o += (
             f"{indent}ANIM_rotate_begin"
             f"\t{tab.join(map(floatToStr, vec_b_to_x(refAxis)))}"
-            f"\t{dataref}\n"
+            f"\t{self.expand_dataref_vars(dataref)}\n"
         )
 
         for keyframe in keyframes:
@@ -791,7 +792,7 @@ class XPlaneBone:
             ao += (
                 f"{indent}ANIM_rotate_begin"
                 f"\t{tab.join(map(floatToStr, vec_b_to_x(axis)))}"
-                f"\t{dataref}\n"
+                f"\t{self.expand_dataref_vars(dataref)}\n"
             )
 
             for keyframe in keyframes:
@@ -862,3 +863,69 @@ class XPlaneBone:
             o += f"{self.getIndent()}ANIM_end\n"
 
         return o
+
+    # IMC: heirarchy based variable substitution in dataref paths
+    def expand_dataref_vars(self, dataref_path: str) -> str:
+        # do we have any keys to substitute?
+        if '$' not in dataref_path:
+            # nothing to do
+            return dataref_path
+
+        # build the substitution dictionary for this level
+        subst_dict = {}
+        if self.blenderObject:
+            for var in self.blenderObject.xplane.dataref_vars:
+                # only if we have a valid identifier
+                if var.ident:
+                    subst_dict[var.ident] = var.value
+
+        # do we have any vars we can substitute at this level?
+        dataref_path, completely_expanded, failed_lookups = self.expand_with_dict(dataref_path, subst_dict)
+
+        # anything left to do? try the parent
+        if self.parent and not completely_expanded:
+            return self.parent.expand_dataref_vars(dataref_path)
+        elif not completely_expanded:
+            if failed_lookups:
+                print(f"WARNING: failed to expand dataref vars: {','.join(failed_lookups)}")
+
+        return dataref_path
+
+    # expand all occurences of $varname$ by lookup in the dictionary
+    # on a failed lookup leave the $varname$ in the string and return a False condition
+    # together with the list of failed varnames
+    # return the expanded string (with substitutions for available varnames)
+    def expand_with_dict(self, expr: str, subst_dict: dict) -> tuple[str, bool, list[str]]:
+        # short out if we have nothing to expand!
+        if '$' not in expr:
+            return expr, True, []
+
+        failed_lookups = []
+        components = []
+        done = False
+
+        # have we managed to expand all variables
+        fully_expanded = True
+
+        # perform replacement on remaining string until we can't find anymore vars
+        while not done:
+            m = re.search(r"(.*?)\$(\w*)\$(.*)", expr)
+            if m:
+                if m.group(1):
+                    components.append(m.group(1))
+                if m.group(2) in subst_dict:
+                    components.append(subst_dict[m.group(2)])
+                else:
+                    # failed to expand a var
+                    fully_expanded = False
+                    components.append(f"${m.group(2)}$")
+                    failed_lookups.append(m.group(2))
+                if m.group(3):
+                    expr = m.group(3)
+                else:
+                    # no trailing content we are done
+                    done = True
+            else:
+                done = True
+
+        return "".join(components), fully_expanded, failed_lookups

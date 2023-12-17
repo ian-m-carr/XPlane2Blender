@@ -911,8 +911,8 @@ class XPlaneManipulator:
                     self.manip.v1_max,
                     self.manip.v2_min,
                     self.manip.v2_max,
-                    self.manip.dataref1,
-                    self.manip.dataref2,
+                    self.expand_dataref_vars(self.manip.dataref1),
+                    self.expand_dataref_vars(self.manip.dataref2),
                     self.manip.tooltip,
                 )
             elif (
@@ -926,7 +926,7 @@ class XPlaneManipulator:
                     self.manip.dz,
                     self.manip.v1,
                     self.manip.v2,
-                    self.manip.dataref1,
+                    self.expand_dataref_vars(self.manip.dataref1),
                     self.manip.tooltip,
                 )
             elif self.type == MANIP_DRAG_AXIS_PIX:
@@ -937,7 +937,7 @@ class XPlaneManipulator:
                     self.manip.exp,
                     self.manip.v1,
                     self.manip.v2,
-                    self.manip.dataref1,
+                    self.expand_dataref_vars(self.manip.dataref1),
                     self.manip.tooltip,
                 )
             elif (
@@ -1065,7 +1065,7 @@ class XPlaneManipulator:
                     drag_axis_xp.z,
                     v1_min,
                     v1_max,
-                    self.manip.dataref1,
+                    self.expand_dataref_vars(self.manip.dataref1),
                     self.manip.tooltip,
                 )
             elif (
@@ -1242,12 +1242,14 @@ class XPlaneManipulator:
                     v1_max,
                     v2_min,
                     v2_max,
-                    self.manip.dataref1,
-                    self.manip.dataref2,
+                    self.expand_dataref_vars(self.manip.dataref1),
+                    self.expand_dataref_vars(self.manip.dataref2),
                     self.manip.tooltip,
                 )
             elif self.type == MANIP_COMMAND:
-                value = (self.manip.cursor, self.manip.command, self.manip.tooltip)
+                value = (self.manip.cursor,
+                         self.expand_dataref_vars(self.manip.command),
+                         self.manip.tooltip)
             elif self.type == MANIP_COMMAND_AXIS:
                 value = (
                     self.manip.cursor,
@@ -1280,14 +1282,14 @@ class XPlaneManipulator:
                     self.manip.cursor,
                     self.manip.v_down,
                     self.manip.v_up,
-                    self.manip.dataref1,
+                    self.expand_dataref_vars(self.manip.dataref1),
                     self.manip.tooltip,
                 )
             elif self.type == MANIP_RADIO:
                 value = (
                     self.manip.cursor,
                     self.manip.v_down,
-                    self.manip.dataref1,
+                    self.expand_dataref_vars(self.manip.dataref1),
                     self.manip.tooltip,
                 )
             elif self.type == MANIP_TOGGLE:
@@ -1295,7 +1297,7 @@ class XPlaneManipulator:
                     self.manip.cursor,
                     self.manip.v_on,
                     self.manip.v_off,
-                    self.manip.dataref1,
+                    self.expand_dataref_vars(self.manip.dataref1),
                     self.manip.tooltip,
                 )
             elif self.type in (MANIP_DELTA, MANIP_WRAP):
@@ -1305,7 +1307,7 @@ class XPlaneManipulator:
                     self.manip.v_hold,
                     self.manip.v1_min,
                     self.manip.v1_max,
-                    self.manip.dataref1,
+                    self.expand_dataref_vars(self.manip.dataref1),
                     self.manip.tooltip,
                 )
             elif self.type in (
@@ -1319,7 +1321,7 @@ class XPlaneManipulator:
                     self.manip.v2,
                     self.manip.click_step,
                     self.manip.hold_step,
-                    self.manip.dataref1,
+                    self.expand_dataref_vars(self.manip.dataref1),
                     self.manip.tooltip,
                 )
             elif self.type == MANIP_NOOP:
@@ -1641,3 +1643,5 @@ class XPlaneManipulator:
                 self.xplanePrimative.cockpitAttributes.add(
                     XPlaneAttribute("ATTR_manip_wheel", f"{self.manip.wheel_delta:.3f}")
                 )
+    def expand_dataref_vars(self, dataref_path: str) -> str:
+        return self.xplanePrimative.xplaneBone.expand_dataref_vars(dataref_path)

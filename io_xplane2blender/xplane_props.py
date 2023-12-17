@@ -531,6 +531,19 @@ class XPlaneEmpty(bpy.types.PropertyGroup):
     )
 
 
+class XPlaneDatarefVar(bpy.types.PropertyGroup):
+    ident: bpy.props.StringProperty(
+        name = "Variable Id",
+        description = "Variable identifier",
+        default = ""
+    )
+
+    value: bpy.props.StringProperty(
+        name="Text Value",
+        description="The value to be substituted into the dataref",
+        default=""
+    )
+
 # Class: XPlaneDataref
 # A X-Plane Dataref
 #
@@ -1690,6 +1703,12 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         type = XPlaneDataref
     )
 
+    dataref_vars: bpy.props.CollectionProperty(
+        name="X-Plane Dataref substitution vars",
+        description="X-Plane Dataref text substitution variables",
+        type=XPlaneDatarefVar
+    )
+
     hud_glass: bpy.props.BoolProperty(
         name = "HUD Glass",
         description = "Object is the glass of a HUD display",
@@ -2202,6 +2221,7 @@ _classes = (
     XPlaneCondition,
     XPlaneCustomAttribute,
     XPlaneDataref,
+    XPlaneDatarefVar,
     XPlaneEmitter,
     XPlaneMagnet,
     XPlaneEmpty,
