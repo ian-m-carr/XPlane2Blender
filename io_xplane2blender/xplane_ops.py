@@ -281,6 +281,31 @@ class OBJECT_OT_remove_xplane_light_attribute(bpy.types.Operator):
 
 # Class: OBJECT_OT_add_xplane_dataref
 # Adds a <XPlaneDataref> to a Blender Object.
+class OBJECT_OT_add_xplane_dataref_var(bpy.types.Operator):
+    bl_label = "Add Dataref Var"
+    bl_idname = "object.add_xplane_dataref_var"
+    bl_description = "Add an X-Plane Dataref variable"
+
+    def execute(self, context):
+        obj = context.object
+        obj.xplane.dataref_vars.add()
+        return {"FINISHED"}
+
+class OBJECT_OT_remove_xplane_dataref_var(bpy.types.Operator):
+    bl_label = "Remove Dataref Var"
+    bl_idname = "object.remove_xplane_dataref_var"
+    bl_description = "Remove the X-Plane Dataref variable"
+
+    index: bpy.props.IntProperty()
+
+    def execute(self, context):
+        obj = context.object
+        obj.xplane.dataref_vars.remove(self.index)
+        return {"FINISHED"}
+
+
+# Class: OBJECT_OT_add_xplane_dataref
+# Adds a <XPlaneDataref> to a Blender Object.
 class OBJECT_OT_add_xplane_dataref(bpy.types.Operator):
     bl_label = "Add Dataref"
     bl_idname = "object.add_xplane_dataref"
@@ -416,6 +441,30 @@ class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
     def execute(self, context):
         obj = context.object
         obj.xplane.layer.export_path_directives.remove(self.index)
+        return {"FINISHED"}
+
+class BONE_OT_add_xplane_dataref_var(bpy.types.Operator):
+    bl_label = "Add Dataref Var"
+    bl_idname = "bone.add_xplane_dataref_var"
+    bl_description = "Add/Update an X-Plane Dataref variable"
+
+    def execute(self, context):
+        bone = context.bone
+        obj = context.object
+        bone.xplane.dataref_vars.add()
+        return {"FINISHED"}
+
+class BONE_OT_remove_xplane_dataref_var(bpy.types.Operator):
+    bl_label = "Remove Dataref Var"
+    bl_idname = "bone.remove_xplane_dataref_var"
+    bl_description = "Remove the X-Plane Dataref variable"
+
+    index: bpy.props.IntProperty()
+
+    def execute(self, context):
+        bone = context.bone
+        obj = context.object
+        bone.xplane.dataref_vars.remove(self.index)
         return {"FINISHED"}
 
 
@@ -1022,14 +1071,18 @@ _ops = (
     OBJECT_OT_remove_xplane_material_attribute,
     OBJECT_OT_add_xplane_light_attribute,
     OBJECT_OT_remove_xplane_light_attribute,
+    OBJECT_OT_add_xplane_dataref_var,
     OBJECT_OT_add_xplane_dataref,
     OBJECT_OT_remove_xplane_dataref,
+    OBJECT_OT_remove_xplane_dataref_var,
     OBJECT_OT_add_xplane_dataref_keyframe,
     OBJECT_OT_remove_xplane_dataref_keyframe,
     OBJECT_OT_add_xplane_export_path_directive,
     OBJECT_OT_remove_xplane_export_path_directive,
+    BONE_OT_add_xplane_dataref_var,
     BONE_OT_add_xplane_dataref,
     BONE_OT_remove_xplane_dataref,
+    BONE_OT_remove_xplane_dataref_var,
     BONE_OT_add_xplane_dataref_keyframe,
     BONE_OT_remove_xplane_dataref_keyframe,
     OBJECT_OT_add_xplane_object_condition,

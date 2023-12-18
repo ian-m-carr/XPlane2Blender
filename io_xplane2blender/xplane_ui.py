@@ -191,6 +191,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             object_layer_layout(self.layout, obj)
 
             animation_layout(self.layout, obj)
+            substitution_vars_layout(self.layout, obj)
             if obj.type == "MESH":
                 mesh_layout(self.layout, obj)
                 manipulator_layout(self.layout, obj)
@@ -1350,6 +1351,37 @@ def animation_layout(
             subrow.prop(attr, "show_hide_v1")
             subrow = subbox.row()
             subrow.prop(attr, "show_hide_v2")
+
+def substitution_vars_layout(layout: bpy.types.UILayout, obj: bpy.types.Object, is_bone: bool = False):
+    """
+    Draws UI Layout for animations, including datarefs
+    and the datarefs search window
+    """
+    layout.separator()
+    row = layout.row()
+    row.label(text="Dataref substitution vars")
+    if is_bone:
+        row.operator("bone.add_xplane_dataref_var", text="Add Dataref Substitution Var")
+    else:
+        row.operator("object.add_xplane_dataref_var", text="Add Dataref Substitution Var")
+
+    box = layout.box()
+    for i, attr in enumerate(obj.xplane.dataref_vars):
+        subbox = box.box()
+        subrow = subbox.row()
+        subrow.prop(attr, "ident")
+
+        if is_bone:
+            subrow.operator(
+                "bone.remove_xplane_dataref_var", text="", emboss=False, icon="X"
+            ).index = i
+        else:
+            subrow.operator(
+                "object.remove_xplane_dataref_var", text="", emboss=False, icon="X"
+            ).index = i
+
+        subrow = subbox.row()
+        subrow.prop(attr, "value")
 
 
 def cockpit_layout(

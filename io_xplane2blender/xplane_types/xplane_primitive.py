@@ -92,7 +92,7 @@ class XPlanePrimitive(XPlaneObject):
             ll_values = [
                 bl_obj.xplane.lightLevel_v1,
                 bl_obj.xplane.lightLevel_v2,
-                bl_obj.xplane.lightLevel_dataref,
+                self.xplaneBone.expand_dataref_vars(bl_obj.xplane.lightLevel_dataref),
             ]
             if 1200 <= xplane_version and bl_obj.xplane.lightLevel_photometric:
                 ll_values.append(bl_obj.xplane.lightLevel_brightness)
