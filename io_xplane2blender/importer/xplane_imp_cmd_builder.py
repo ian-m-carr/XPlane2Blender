@@ -392,9 +392,12 @@ class IntermediateDatablock:
         ]
 
         me = bpy.data.meshes.new(self.name)
-        # check if the smoothing operation is requested in the scene properties
-        if bpy.context.scene.xplane.auto_smooth:
-            me.use_auto_smooth = True
+
+        # auto-smooth is replaced by a modifier in 4.1
+        if bpy.app.version < (4, 1, 0):
+            # check if the smoothing operation is requested in the scene properties
+            if bpy.context.scene.xplane.auto_smooth:
+                me.use_auto_smooth = True
 
         me.from_pydata(py_vertices, [], py_faces)
 
