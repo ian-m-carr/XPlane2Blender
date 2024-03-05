@@ -41,6 +41,7 @@ sim/operation/toggle_joy_profiles_window           Toggle the keyboard & joystic
 sim/operation/toggle_custom_location_window        Toggle the Location details window.
 sim/operation/show_camera_editor                   Show the camera keyframe editor.
 sim/operation/toggle_style_guide                   Toggle display of the V11 UI style guide.
+sim/operation/toggle_fps_test_recoder              Show the FPS test recorder.
 sim/operation/slider_01                            Slider #1 On/Off control.
 sim/operation/slider_02                            Slider #2 On/Off control.
 sim/operation/slider_03                            Slider #3 On/Off control.
@@ -70,12 +71,11 @@ sim/operation/auto_board                           Auto-set electrical system fo
 sim/operation/auto_start                           Auto-start engines to running, real-time.
 sim/operation/fully_service_acf                    Finish servicing current viewed aircraft.
 sim/operation/quick_start                          Quick-start engines to running.
-sim/magnetos/magnetos_off                          Magnetos off.
-sim/magnetos/magnetos_both                         Magnetos both.
-sim/engines/engage_starters                        Engage starters.
 sim/engines/throttle_down                          Throttle down a bit.
 sim/engines/throttle_up                            Throttle up a bit.
-sim/engines/TOGA_power                             Engage TOGA power.
+sim/engines/throttle_full                          Throttle to wide open!
+sim/engines/throttle_horizontal_down               Throttle horizontal down a bit.
+sim/engines/throttle_horizontal_up                 Throttle horizontal up a bit.
 sim/engines/prop_down                              Prop coarse a bit.
 sim/engines/prop_up                                Prop fine a bit.
 sim/engines/mixture_min                            Mixture to cut off.
@@ -87,6 +87,9 @@ sim/engines/carb_heat_on                           Carb heat on.
 sim/engines/carb_heat_toggle                       Carb heat toggle.
 sim/flight_controls/cowl_flaps_open                Move cowl flaps open a bit.
 sim/flight_controls/cowl_flaps_closed              Move cowl flaps to closed a bit.
+sim/magnetos/magnetos_off                          Magnetos off.
+sim/magnetos/magnetos_both                         Magnetos both.
+sim/engines/engage_starters                        Engage starters.
 sim/engines/idle_hi_lo_toggle                      Idle high/low toggle.
 sim/engines/idle_hi_lo_toggle_1                    Idle high/low toggle Engine 1.
 sim/engines/idle_hi_lo_toggle_2                    Idle high/low toggle Engine 2.
@@ -255,8 +258,6 @@ sim/starters/engage_starter_5                      Engage starter #5.
 sim/starters/engage_starter_6                      Engage starter #6.
 sim/starters/engage_starter_7                      Engage starter #7.
 sim/starters/engage_starter_8                      Engage starter #8.
-sim/engines/throttle_horizontal_down               Throttle horizontal down a bit.
-sim/engines/throttle_horizontal_up                 Throttle horizontal up a bit.
 sim/engines/throttle_down_1                        Throttle down a bit for engine #1.
 sim/engines/throttle_down_2                        Throttle down a bit for engine #2.
 sim/engines/throttle_down_3                        Throttle down a bit for engine #3.
@@ -421,6 +422,16 @@ sim/engines/fire_ext_7_on                          Fire extinguisher #7 on.
 sim/engines/fire_ext_8_on                          Fire extinguisher #8 on.
 sim/flight_controls/flaps_up                       Flaps up a notch.
 sim/flight_controls/flaps_down                     Flaps down a notch.
+sim/flight_controls/flaps_up_full                  Flaps retract fully.
+sim/flight_controls/flaps_down_full                Flaps extend fully.
+sim/flight_controls/flaps_detent_1                 Flaps 1st detent.
+sim/flight_controls/flaps_detent_2                 Flaps 2nd detent.
+sim/flight_controls/flaps_detent_3                 Flaps 3rd detent.
+sim/flight_controls/flaps_detent_4                 Flaps 4th detent.
+sim/flight_controls/flaps_detent_5                 Flaps 5th detent.
+sim/flight_controls/flaps_detent_6                 Flaps 6th detent.
+sim/flight_controls/flaps_detent_7                 Flaps 7th detent.
+sim/flight_controls/flaps_detent_8                 Flaps 8th detent.
 sim/flight_controls/vector_sweep_aft               Vector or sweep aft.
 sim/flight_controls/vector_sweep_forward           Vector or sweep forward.
 sim/flight_controls/blimp_lift_down                Blimp lift down a bit.
@@ -561,6 +572,7 @@ sim/flight_controls/hydraulic_eng5C_tog            Engine 5-driven hydraulic pum
 sim/flight_controls/hydraulic_eng6C_tog            Engine 6-driven hydraulic pump C toggle
 sim/flight_controls/hydraulic_eng7C_tog            Engine 7-driven hydraulic pump C toggle
 sim/flight_controls/hydraulic_eng8C_tog            Engine 8-driven hydraulic pump C toggle
+sim/flight_controls/hydraulic_rat_man_on           RAT-driven hydraulic pump on
 sim/flight_controls/tailhook_down                  Tailhook down.
 sim/flight_controls/tailhook_up                    Tailhook up.
 sim/flight_controls/tailhook_toggle                Toggle the tailhook.
@@ -756,6 +768,7 @@ sim/electrical/APU_off                             APU off.
 sim/electrical/APU_fire_shutoff                    APU emergency shutoff with fire handle.
 sim/electrical/APU_generator_on                    APU generator on.
 sim/electrical/APU_generator_off                   APU generator off.
+sim/electrical/air_driven_generator_on             Air-driven generator on.
 sim/electrical/GPU_on                              GPU on.
 sim/electrical/GPU_off                             GPU off.
 sim/electrical/GPU_toggle                          GPU toggle.
@@ -1063,6 +1076,9 @@ sim/ice/wing_tai1_off                              Anti-ice: right wing, bleed a
 sim/ice/wing_tai_tog                               Anti-ice: all wing, bleed anti-ice toggle.
 sim/ice/wing_tai0_tog                              Anti-ice: left wing, bleed anti-ice toggle.
 sim/ice/wing_tai1_tog                              Anti-ice: right wing, bleed anti-ice toggle.
+sim/ice/wing_tai_crossover_open                    Anti-ice: wing bleed air crossover valve open.
+sim/ice/wing_tai_crossover_close                   Anti-ice: wing bleed air crossover valve close.
+sim/ice/wing_tai_crossover_toggle                  Anti-ice: wing bleed air crossover valve toggle.
 sim/ice/tail_tai_on                                Anti-ice: all tail, bleed anti-ice on.
 sim/ice/tail_tai0_on                               Anti-ice: left tail, bleed anti-ice on.
 sim/ice/tail_tai1_on                               Anti-ice: right tail, bleed anti-ice on.
@@ -1246,11 +1262,11 @@ sim/weapons/fire_rate_down                         Weapon fire rate down.
 sim/weapons/fire_rate_up                           Weapon fire rate up.
 sim/weapons/weapon_select_down                     Weapon select down.
 sim/weapons/weapon_select_up                       Weapon select up.
-sim/weapons/fire_guns                              Fire guns.
 sim/weapons/fire_air_to_air                        Fire air-to-air selection.
 sim/weapons/fire_air_to_ground                     Fire air-to-ground selection.
-sim/weapons/fire_any_armed                         Fire all armed selections.
-sim/weapons/fire_any_shell                         Fire selected weapon.
+sim/weapons/fire_any_armed                         Fire all armed weapons.
+sim/weapons/fire_guns                              Fire armed guns.
+sim/weapons/fire_any_shell                         Fire armed missiles or bombs.
 sim/weapons/GPS_lock_here                          Target camera pointer in GPS.
 sim/weapons/weapon_target_down                     Target select down.
 sim/weapons/weapon_target_up                       Target select up.
@@ -1275,6 +1291,26 @@ sim/lights/spot_light_right                        Aim spotlight right.
 sim/lights/spot_light_up                           Aim spotlight up.
 sim/lights/spot_light_down                         Aim spotlight down.
 sim/lights/spot_light_center                       Aim spotlight to center.
+sim/flight_controls/door_toggle_1                  Door #1 toggle.
+sim/flight_controls/door_toggle_2                  Door #2 toggle.
+sim/flight_controls/door_toggle_3                  Door #3 toggle.
+sim/flight_controls/door_toggle_4                  Door #4 toggle.
+sim/flight_controls/door_toggle_5                  Door #5 toggle.
+sim/flight_controls/door_toggle_6                  Door #6 toggle.
+sim/flight_controls/door_toggle_7                  Door #7 toggle.
+sim/flight_controls/door_toggle_8                  Door #8 toggle.
+sim/flight_controls/door_toggle_9                  Door #9 toggle.
+sim/flight_controls/door_toggle_10                 Door #10 toggle.
+sim/flight_controls/door_toggle_11                 Door #11 toggle.
+sim/flight_controls/door_toggle_12                 Door #12 toggle.
+sim/flight_controls/door_toggle_13                 Door #13 toggle.
+sim/flight_controls/door_toggle_14                 Door #14 toggle.
+sim/flight_controls/door_toggle_15                 Door #15 toggle.
+sim/flight_controls/door_toggle_16                 Door #16 toggle.
+sim/flight_controls/door_toggle_17                 Door #17 toggle.
+sim/flight_controls/door_toggle_18                 Door #18 toggle.
+sim/flight_controls/door_toggle_19                 Door #19 toggle.
+sim/flight_controls/door_toggle_20                 Door #20 toggle.
 sim/flight_controls/door_open_1                    Door #1 open.
 sim/flight_controls/door_open_2                    Door #2 open.
 sim/flight_controls/door_open_3                    Door #3 open.
@@ -1323,7 +1359,6 @@ sim/flight_controls/glider_tow_left                Tow-plane for gliders: Take m
 sim/flight_controls/glider_tow_right               Tow-plane for gliders: Take me right.
 sim/flight_controls/winch_faster                   Winch faster. (for gliders).
 sim/flight_controls/winch_slower                   Winch slower. (for gliders).
-sim/flight_controls/engage_cat_shot                Engage catapault.
 sim/ground_ops/jetway                              Service the airplane with jetways.
 sim/ground_ops/service_plane                       Service the airplane with ground trucks.
 sim/ground_ops/pushback_left                       Push-back for airliners: Nose 90 left.
@@ -1664,6 +1699,8 @@ sim/instruments/ECAM_mode_up                       ECAM mode up.
 sim/instruments/ECAM_mode_down                     ECAM mode down.
 sim/instruments/map_zoom_in                        Zoom in EFIS map.
 sim/instruments/map_zoom_out                       Zoom out EFIS map.
+sim/instruments/map_mag_north                      EFIS map reference magnetic north.
+sim/instruments/map_true_north                     EFIS map reference true north.
 sim/instruments/EFIS_wxr                           EFIS map weather.
 sim/instruments/EFIS_tcas                          EFIS map TCAS.
 sim/instruments/EFIS_apt                           EFIS map airport.
@@ -1679,6 +1716,8 @@ sim/instruments/EFIS_tcas_window                   EFIS map TCAS window.
 sim/instruments/EFIS_wxr_pfd                       EFIS HSI arc with weather on PFD.
 sim/instruments/map_copilot_zoom_in                Zoom in copilot EFIS map.
 sim/instruments/map_copilot_zoom_out               Zoom out copilot EFIS map.
+sim/instruments/map_copilot_mag_north              EFIS copilot map reference magnetic north.
+sim/instruments/map_copilot_true_north             EFIS copilot map reference true north.
 sim/instruments/EFIS_copilot_wxr                   EFIS copilot map weather.
 sim/instruments/EFIS_copilot_tcas                  EFIS copilot map TCAS.
 sim/instruments/EFIS_copilot_apt                   EFIS copilot map airport.
@@ -1794,6 +1833,8 @@ sim/autopilot/hsi_select_copilot_gps2              HSI shows GPS2, copilot.
 sim/autopilot/hsi_toggle_copilot_gps               HSI toggles between GPS 2 and GPS 1, copilot.
 sim/autopilot/hsi_toggle_copilot_preview           HSI preview toggle on/off, copilot.
 sim/flight_controls/carrier_ILS                    Set the radios for the carrier ILS.
+sim/flight_controls/boats_navaids_on               Turn on the navaids on the carrier and frigate.
+sim/flight_controls/boats_navaids_off              Turn off the navaids on the carrier and frigate.
 sim/autopilot/source_01                            Change autopilot instrument source, 0 or 1
 sim/autopilot/fdir_on                              Flight director on.
 sim/autopilot/fdir_toggle                          Flight director toggle.
@@ -1827,9 +1868,12 @@ sim/autopilot/servos_off_any                       Disco servos, which ever side
 sim/autopilot/ap_disc_trim_interrupt               Disconnect autopilot and interrupt pitch trim servo.
 sim/autopilot/servos_yawd_off_any                  Disco servos and yaw damp, any side.
 sim/autopilot/servos_yawd_trim_off_any             Disco servos, yaw damp and trim any side.
-sim/autopilot/electric_master_off                  Autopilot electric master switch off.
 sim/autopilot/electric_master_on                   Autopilot electric master switch on.
+sim/autopilot/electric_master_off                  Autopilot electric master switch off.
 sim/autopilot/electric_master_toggle               Autopilot electric master switch toggle.
+sim/autopilot/electric_trim_servo_on               Electric trim servo switch on.
+sim/autopilot/electric_trim_servo_off              Electric trim servo switch off.
+sim/autopilot/electric_trim_servo_toggle           Electric trim servo switch toggle.
 sim/autopilot/priority_pb_left                     Stick priority: Left
 sim/autopilot/priority_pb_right                    Stick priority: Right
 sim/autopilot/autothrottle_on                      Autopilot auto-throttle speed-hold on.
@@ -2016,6 +2060,13 @@ sim/FMS/prog                                       FMS: PROG
 sim/FMS/exec                                       FMS: EXEC
 sim/FMS/fix                                        FMS: FIX
 sim/FMS/navrad                                     FMS: NAVRAD
+sim/FMS/airport                                    FMS: AIRPORT
+sim/FMS/up                                         FMS: UP
+sim/FMS/down                                       FMS: DOWN
+sim/FMS/perf                                       FMS: PERF
+sim/FMS/fuel_pred                                  FMS: FUEL PRED
+sim/FMS/data                                       FMS: DATA
+sim/FMS/menu                                       FMS: MENU
 sim/FMS/prev                                       FMS: prev
 sim/FMS/next                                       FMS: next
 sim/FMS/key_0                                      FMS: key_0
@@ -2061,6 +2112,7 @@ sim/FMS/key_back                                   FMS: key_back
 sim/FMS/key_space                                  FMS: key_space
 sim/FMS/key_delete                                 FMS: key_delete
 sim/FMS/key_clear                                  FMS: key_clear
+sim/FMS/key_overfly                                FMS: key_overfly
 sim/FMS/CDU_popup                                  FMS: CDU popup
 sim/FMS/CDU_popout                                 FMS: pop out CDU window
 sim/FMS2/ls_1l                                     FMS2: line select 1l
@@ -2088,6 +2140,13 @@ sim/FMS2/prog                                      FMS2: PROG
 sim/FMS2/exec                                      FMS2: EXEC
 sim/FMS2/fix                                       FMS2: FIX
 sim/FMS2/navrad                                    FMS2: NAVRAD
+sim/FMS2/airport                                   FMS2: AIRPORT
+sim/FMS2/up                                        FMS2: UP
+sim/FMS2/down                                      FMS2: DOWN
+sim/FMS2/perf                                      FMS2: PERF
+sim/FMS2/fuel_pred                                 FMS2: FUEL PRED
+sim/FMS2/data                                      FMS2: DATA
+sim/FMS2/menu                                      FMS2: MENU
 sim/FMS2/prev                                      FMS2: prev
 sim/FMS2/next                                      FMS2: next
 sim/FMS2/key_0                                     FMS2: key_0
@@ -2133,6 +2192,7 @@ sim/FMS2/key_back                                  FMS2: key_back
 sim/FMS2/key_space                                 FMS2: key_space
 sim/FMS2/key_delete                                FMS2: key_delete
 sim/FMS2/key_clear                                 FMS2: key_clear
+sim/FMS2/key_overfly                               FMS2: key_overfly
 sim/FMS2/CDU_popout                                FMS2: pop out CDU window
 sim/FMS2/CDU_popup                                 FMS2: CDU popup
 sim/annunciator/gear_warning_mute                  Mute gear warning horn.
@@ -2525,6 +2585,8 @@ sim/GPS/gcu479/home                                GCU: Home - Default Nav.
 sim/GPS/gcu479/crs                                 GCU: CRS.
 sim/GPS/gcu479/cursor                              GCU: cursor.
 sim/GPS/gcu479/1_2_ctr                             GCU: radios 1-2, CRS center.
+sim/GPS/gcu479/popout                              GCU: pop out keyboard.
+sim/GPS/gcu479/popup                               GCU: popup keyboard.
 sim/GPS/G1000_display_reversion                    G1000 red button for display reversion (backup display).
 sim/systems/overspeed_test                         Prop overspeed test.
 sim/fuel/indicate_aux                              Fuel tanks show auxiliary tanks.
@@ -2586,6 +2648,30 @@ sim/operation/time_up_lots                         Time: a lot later.
 sim/operation/date_down                            Date: a little earlier.
 sim/operation/date_up                              Date: a little later.
 sim/instruments/timer_is_GMT                       Timer is GMT.
+sim/instruments/chrono1_start_stop                 Start or stop the #1 chrono.
+sim/instruments/chrono1_reset                      Reset the #1 chrono.
+sim/instruments/chrono1_cycle                      chrono #1 start/stop/reset.
+sim/instruments/chrono2_start_stop                 Start or stop the #2 chrono.
+sim/instruments/chrono2_reset                      Reset the #2 chrono.
+sim/instruments/chrono2_cycle                      chrono #2 start/stop/reset.
+sim/instruments/chrono3_start_stop                 Start or stop the #3 chrono.
+sim/instruments/chrono3_reset                      Reset the #3 chrono.
+sim/instruments/chrono3_cycle                      chrono #3 start/stop/reset.
+sim/instruments/chrono4_start_stop                 Start or stop the #4 chrono.
+sim/instruments/chrono4_reset                      Reset the #4 chrono.
+sim/instruments/chrono4_cycle                      chrono #4 start/stop/reset.
+sim/instruments/elapsed1_start_stop                Start or stop the #1 elapsed timer.
+sim/instruments/elapsed1_reset                     Reset the #1 elapsed timer.
+sim/instruments/elapsed1_cycle                     elapsed timer #1 start/stop/reset.
+sim/instruments/elapsed2_start_stop                Start or stop the #2 elapsed timer.
+sim/instruments/elapsed2_reset                     Reset the #2 elapsed timer.
+sim/instruments/elapsed2_cycle                     elapsed timer #2 start/stop/reset.
+sim/instruments/elapsed3_start_stop                Start or stop the #3 elapsed timer.
+sim/instruments/elapsed3_reset                     Reset the #3 elapsed timer.
+sim/instruments/elapsed3_cycle                     elapsed timer #3 start/stop/reset.
+sim/instruments/elapsed4_start_stop                Start or stop the #4 elapsed timer.
+sim/instruments/elapsed4_reset                     Reset the #4 elapsed timer.
+sim/instruments/elapsed4_cycle                     elapsed timer #4 start/stop/reset.
 sim/operation/flightmodel_speed_change             Sim 1x 2x 4x sim speed.
 sim/operation/pause_toggle                         Pause the simulation.
 sim/operation/video_record_toggle                  Toggle AVI movie recording.
@@ -2611,14 +2697,22 @@ sim/operation/checklist_next                       Next item in checklist.
 sim/operation/checklist_previous                   Previous item in checklist.
 sim/operation/contact_atc                          Contact ATC.
 sim/operation/contact_atc_ptt                      Contact ATC (Push-to-talk)
+sim/operation/toggle_auto_readback                 Toggle auto-readback of ATC messages.
 sim/operation/atc_readback                         Readback last ATC message.
+sim/operation/rwy_lights_off                       Runway lights off.
+sim/operation/rwy_lights_lo                        Runway lights lo.
+sim/operation/rwy_lights_med                       Runway lights med.
+sim/operation/rwy_lights_hi                        Runway lights hi.
 sim/operation/toggle_ai_flies                      Toggle AI flying your aircraft.
 sim/operation/toggle_yoke                          Toggle yoke visibility.
 sim/operation/reset_flight                         Reset flight to most recent start.
 sim/operation/go_to_default                        Reset flight to nearest airport.
 sim/operation/reset_to_runway                      Reset flight to nearest runway.
 sim/operation/go_next_runway                       Reset flight to next runway on current airport
-sim/operation/Carrier_Catshot                      Carrier catshot.
+sim/operation/Carrier_Catshot1                     Carrier catshot 1.
+sim/operation/Carrier_Catshot2                     Carrier catshot 2.
+sim/operation/Carrier_Catshot3                     Carrier catshot 3.
+sim/operation/Carrier_Catshot4                     Carrier catshot 4.
 sim/operation/Glider_Winch                         Glider winch start.
 sim/operation/Glider_Tow                           Glider tow start.
 sim/operation/Formation_Flying                     Formation flying.
@@ -2753,7 +2847,9 @@ sim/general/rot_right_slow                         Rotate view: pan right slow.
 sim/general/track_p0                               Views & Data IO track aircraft: Yours.
 sim/general/track_p_next                           Views & Data IO track aircraft: Next
 sim/general/track_p_prev                           Views & Data IO track aircraft: Previous.
-sim/general/toggle_traffic_paths                   Toggle display of traffic paths.
+sim/general/toggle_traffic_paths                   Toggle display of ground traffic paths.
+sim/general/toggle_air_traffic_paths               Toggle display of air traffic paths.
+sim/developer/dump_atc_state_to_log                Dump ATC state to the log.
 sim/developer/toggle_texture_browser               Toggle the texture browser window.
 sim/developer/toggle_particle_browser              Toggle the particle system browser window.
 sim/general/toggle_projection_win                  Toggle the projection configuration window.
@@ -2761,6 +2857,9 @@ sim/developer/toggle_autopilot_constants           Toggle the autopilot constant
 sim/developer/toggle_microprofiler                 Toggle the frame timing profiler window.
 sim/developer/toggle_vram_profiler                 Toggle the VRAM profiler window.
 sim/developer/toggle_plugin_admin                  Toggle the Plugin Admin window.
+sim/developer/run_fm_test_slow                     Run Flight Model Test Slow
+sim/developer/run_fm_test_fast                     Run Flight Model Test Fast
+sim/developer/toggle_rain_inspector                Toggle the Rain Inspector window.
 sim/VR/xpad/home_button                            Press the Home Button of the VR xPad.
 sim/VR/toggle_3d_mouse_cursor                      Toggle the 3-d mouse cursor in VR.
 sim/VR/toggle_vr                                   Toggle enabling of VR hardware.

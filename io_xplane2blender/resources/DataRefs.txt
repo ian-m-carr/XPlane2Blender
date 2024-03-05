@@ -1,4 +1,4 @@
-2 1208 Wed Aug 16 20:19:08 2023
+2 1208 Tue Oct 24 19:02:03 2023
 
 sim/aircraft/autopilot/vvi_step_ft	float	y	feet	Step increment for autopilot VVI	
 sim/aircraft/autopilot/alt_step_ft	float	y	feet	Step increment for autopilot altitude	
@@ -40,15 +40,20 @@ sim/aircraft/view/acf_door_x	float	n	meters	Position of door relative to CG, lat
 sim/aircraft/view/acf_door_y	float	n	meters	Position of door relative to CG, vertical offset in meters	
 sim/aircraft/view/acf_door_z	float	n	meters	Position of door relative to CG, longitude offset in meters	
 sim/aircraft/view/acf_livery_index	int	n	index	Index number of livery	
-sim/aircraft/view/acf_relative_path	byte[1024]	n	string	Path of current ACF.	
-sim/aircraft/view/acf_livery_path	byte[1024]	n	string	Path of current livery. Ends in dir separator. WARNING: slow dataref, don't read a lot!	
+sim/aircraft/view/acf_relative_path	byte[]	n	string	Path of current ACF.
+sim/aircraft/view/acf_livery_path	byte[]	n	string	Path of current livery. Ends in dir separator. WARNING: slow dataref, don't read a lot!
 sim/aircraft/forcefeedback/acf_ff_hydraulic	int	y	
 sim/aircraft/forcefeedback/acf_ff_stickshaker	int	y	
 sim/aircraft/electrical/num_batteries	int	n	count	The number of batteries on this plane	
 sim/aircraft/electrical/num_generators	int	n	count	The number of generators on this plane	
 sim/aircraft/electrical/num_inverters	int	n	count	The number of inverters on this plane	
 sim/aircraft/electrical/num_buses	int	n	count	The number of busses on this plane	
+sim/aircraft/electrical/bus_apu_is_on	int	n	int	The bus that the APU is connected to, starting at bus 0	
+sim/aircraft/electrical/bus_essentials_are_on	int	n	int	The bus that is considered essential, and that is fed by the RAT emergency generator if so equipped. Index starting at bus 0	
+sim/aircraft/electrical/acf_nom_gen_volt	float	n	volts	Nominal generator voltage for this aircraft	
+sim/aircraft/electrical/acf_nom_bat_volt	float	n	volts	Nominal battery voltage for this aircraft	
 sim/aircraft/electrical/essential_ties	int	y	bitfield	Busses that can feed the essential bus. If busses 0 and 2 can feed the essential bus, this would be set to 2^0 + 2^2 = 1+4 = 5	
+sim/aircraft/electrical/bus_tie_selective	int	y	bitfield	Bitfield indicating which busses are tied together when the bus cross tie is closed. If busses 0 and 2 are conected by the tie, this would be set to 2^0 + 2^2 = 1+4 = 5	
 sim/aircraft/engine/acf_num_engines	int	y	
 sim/aircraft/engine/acf_auto_featherEQ	int	y	
 sim/aircraft/engine/acf_prop_fail_mode	int	y	enum	Where the prop pitch angle goes when the governor loses oil pressure: 0=low pitch, 1=high pitch, 2=feather, 3=start lock	
@@ -223,8 +228,6 @@ sim/aircraft/prop/acf_discarea	float[16]	y	???	For total propwash
 sim/aircraft/prop/acf_ringarea	float[16][10]	y	???	Area each ring of prop	
 sim/aircraft/prop/acf_des_rpm_prp	float[16]	y	???	Design point	
 sim/aircraft/prop/acf_des_kts_acf	float[16]	y	???	Design point	
-sim/aircraft/parts/acf_Rafl0	byte[2920]	n	string[40]	Array of airfoil names, per part	
-sim/aircraft/parts/acf_Tafl0	byte[2920]	n	string[40]	File, not path	
 sim/aircraft/parts/acf_els	int[56]	y	???	[WING]	
 sim/aircraft/parts/acf_Xarm	float[10]	y	???	[GEAR]	
 sim/aircraft/parts/acf_Yarm	float[10]	y	???	[GEAR]	
@@ -238,8 +241,6 @@ sim/aircraft/parts/acf_semilen_SEG	float[56]	y	???	[WING] semilen this segment o
 sim/aircraft/parts/acf_semilen_JND	float[56]	y	???	[WING] semilen of the JOINED wing segments, all JOINED SEGMENTS, for AR and CDi and ground effect, etc.	
 sim/aircraft/parts/acf_e	float[56]	y	???	[WING] Oswald's E	
 sim/aircraft/parts/acf_AR	float[56]	y	???	[WING]	
-sim/aircraft/parts/acf_s	float[730]	y	???	S for each element for foils, and FRONT, SIDE, TOP for BODIES.	
-sim/aircraft/parts/acf_mac	float[730]	y	
 sim/aircraft/parts/acf_anginc	float[56][10]	y	???	???	
 sim/aircraft/parts/acf_flapEQ	int	y	
 sim/aircraft/parts/acf_slatEQ	int	y	
@@ -472,7 +473,7 @@ sim/aircraft/overflow/acf_roll_co	float	y	1	Coefficient of rolling friction (res
 sim/aircraft/overflow/acf_brake_co	float	y	1	Coefficient of static friction for braking and side-loading (steering)	
 sim/aircraft/overflow/acf_drive_by_wire	int	y	???	Engine always runs at optimum mixture... like FADEC or auto conversions.	
 sim/aircraft/overflow/acf_is_glossy	int	y	???	Plane has specularity lighting.	
-sim/aircraft/overflow/acf_num_tanks	int	y	count	Number fuel tanks - as of 860, all planes have 9 tanks and ratios for each - ratio of 0.0 means tank is not used	
+sim/aircraft/overflow/acf_num_tanks	int	n	count	Number fuel tanks - as of 860, all planes have 9 tanks and ratios for each - ratio of 0.0 means tank is not used	
 sim/aircraft/overflow/acf_has_refuel	int	y	???	Refueling port	
 sim/aircraft/overflow/acf_jett_is_slung	int	y	???	Jettisonable load is slung now	
 sim/aircraft/overflow/acf_eng_mass	float[16]	y	???	Mass of each engine for distribution and loss on engine separation. NOTE : This used to be f57 in v6	
@@ -540,16 +541,16 @@ sim/aircraft/overflow/jet_Mach_takeoff	float	y	mach	Mach number for takeoff (pro
 sim/aircraft/overflow/jet_SFC_takeoff	float	y	kg/kg	At takeoff conditions (N1/mach) specified, fuel consumption in kg per kg of generated thrust	
 sim/aircraft/overflow/ff_rat_idle_JET	float	y	ratio	???	
 sim/aircraft/systems/fdir_needed_to_engage_servos	int	y	boolean	If this is true, commands to engage the AP servos will be ignored if the FD is not on.	
-sim/airfoils/afl_clB	float[56][2][2]	y	???	???	
-sim/airfoils/afl_almin_array	float[56][2][2]	y	???	???	
-sim/airfoils/afl_almax_array	float[56][2][2]	y	???	???	
-sim/airfoils/afl_re_num	float[56][2][2]	y	???	???	
-sim/airfoils/afl_t_rat	float[56][2]	y	???	???	
-sim/airfoils/afl_mach_div	float[56][2]	y	???	???	
-sim/airfoils/afl_clM	float[56][2][2]	y	???	???	
-sim/airfoils/afl_cl	float[56][2][2][721]	y	???	???	
-sim/airfoils/afl_cd	float[56][2][2][721]	y	???	???	
-sim/airfoils/afl_cm	float[56][2][2][721]	y	???	???	
+sim/airfoils/afl_clB	float[56][2][2]	y	???	???	DEPRECATED - DO NOT USE!!!
+sim/airfoils/afl_almin_array	float[56][2][2]	y	???	???	DEPRECATED - DO NOT USE!!!
+sim/airfoils/afl_almax_array	float[56][2][2]	y	???	???	DEPRECATED - DO NOT USE!!!
+sim/airfoils/afl_re_num	float[56][2][2]	y	???	???	DEPRECATED - DO NOT USE!!!
+sim/airfoils/afl_t_rat	float[56][2]	y	???	???	DEPRECATED - DO NOT USE!!!
+sim/airfoils/afl_mach_div	float[56][2]	y	???	???	DEPRECATED - DO NOT USE!!!
+sim/airfoils/afl_clM	float[56][2][2]	y	???	???	DEPRECATED - DO NOT USE!!!
+sim/airfoils/afl_cl	float[56][2][2][721]	y	???	???	DEPRECATED - DO NOT USE!!!
+sim/airfoils/afl_cd	float[56][2][2][721]	y	???	???	DEPRECATED - DO NOT USE!!!
+sim/airfoils/afl_cm	float[56][2][2][721]	y	???	???	DEPRECATED - DO NOT USE!!!
 sim/atc/user_aircraft_transmitting	int	n	boolean	Is the Users/P0 aircraft currently transmitting on the radio?	
 sim/atc/com1_tuned_facility	int	n	enum	The ATC facility type that the user's aircraft is tuned to. 0=None, 1=Del, 2=Gnd, 3=Twr, 4=Tracon, 5=Ctr	
 sim/atc/com2_tuned_facility	int	n	enum	The ATC facility type that the user's aircraft is tuned to. 0=None, 1=Del, 2=Gnd, 3=Twr, 4=Tracon, 5=Ctr	
@@ -581,8 +582,8 @@ sim/cockpit/autopilot/flight_director_pitch	float	y	degrees	The recommended pitc
 sim/cockpit/autopilot/flight_director_roll	float	y	degrees	The recommended roll from the Flight Director.  Use override_flightdir	
 sim/cockpit/autopilot/autopilot_state	int	y	flags	Various autopilot engage modes, etc.  See docs for flags	
 sim/cockpit/autopilot/heading_roll_mode	int	y	enum	Bank limit - 0 = auto, 1-6 = 5-30 degrees of bank	
-sim/cockpit/autopilot/mode_hnav	int	y	enum	Localizer mode (off, armed, engaged). DEPRECATED	DEPRECATED - DO NOT USE!!!
-sim/cockpit/autopilot/mode_gls	int	y	enum	Glide-slope mode (off, armed, engaged). DEPRECATED	DEPRECATED - DO NOT USE!!!
+sim/cockpit/autopilot/mode_hnav	int	n	enum	Localizer mode (off, armed, engaged). DEPRECATED	DEPRECATED - DO NOT USE!!!
+sim/cockpit/autopilot/mode_gls	int	n	enum	Glide-slope mode (off, armed, engaged). DEPRECATED	DEPRECATED - DO NOT USE!!!
 sim/cockpit/autopilot/syn_hold_deg	float	y	degrees	The pitch held when in pitch-hold mode.	
 sim/cockpit/autopilot/nav_steer_deg_mag	float	y	degrees	Heading to fly in nav mode - write this when override_nav_heading is set.  Useful for making a custom GPS that flies arcs.	
 sim/cockpit/avidyne/lft_hil	int	y	???	???	
@@ -597,7 +598,7 @@ sim/cockpit/electrical/battery_EQ	int	n	boolean	Does this cockpit have a battery
 sim/cockpit/electrical/avionics_on	int	y	boolean	Is there power to the avionics	
 sim/cockpit/electrical/avionics_EQ	int	y	boolean	Does this cockpit have an avionics switch	
 sim/cockpit/electrical/generator_on	int[8]	y	boolean	Is the generator on (to charge batteries) - one for each engine	
-sim/cockpit/electrical/generator_EQ	int	y	boolean	Does this cockpit have generator switches?	
+sim/cockpit/electrical/generator_EQ	int	n	boolean	Does this cockpit have generator switches?	
 sim/cockpit/electrical/generator_apu_on	int	y	boolean	Is the APU Generator on	
 sim/cockpit/electrical/gpu_on	int	y	boolean	Is the GPU on	
 sim/cockpit/electrical/generator_apu_amps	float	y	amps	APU Generator amps	
@@ -617,7 +618,7 @@ sim/cockpit/electrical/night_vision_on	int	y	boolean	Night vision goggles on?
 sim/cockpit/electrical/ah_bar	float	y	???	Cockpit light rheostat - this appears to be legacy and no longer used.	DEPRECATED - DO NOT USE!!!
 sim/cockpit/electrical/battery_charge_watt_hr	float[8]	y	watt/hours	Current charge of each of the 8 batteries in watt-hours.	
 sim/cockpit/engine/inverter_on	int[2]	y	boolean	Is the inverter providing power (was one per engine, now 2 max.)	
-sim/cockpit/engine/inverter_eq	int	y	boolean	Does this cockpit have inverter switches?	
+sim/cockpit/engine/inverter_eq	int	n	boolean	Does this cockpit have inverter switches?	
 sim/cockpit/engine/fuel_pump_on	int[16]	y	boolean	Is the fuel pump on (one per engine)	
 sim/cockpit/engine/fadec_on	int[16]	y	boolean	Is the fadec on (one per engine)	
 sim/cockpit/engine/idle_speed	int[16]	y	boolean	Idle speed (per engine)	
@@ -626,7 +627,7 @@ sim/cockpit/engine/fuel_tank_transfer	int	y	???	Which fuel tank is open for tran
 sim/cockpit/engine/fuel_tank_transfer_from	int	y	???	Which fuel tank is open for transfers (source) 0=none,1=left,2=center,3=right,4=all,5=aft	
 sim/cockpit/engine/ignition_on	int[16]	y	enum	Ignition key position 0 = off, 1 = left, 2 = right, 3 = both	
 sim/cockpit/engine/igniters_on	int[16]	y	boolean	Starter ignition	
-sim/cockpit/engine/starter_duration	float[16]	y	seconds	Time since ignition was pressed or something	
+sim/cockpit/engine/starter_duration	float[16]	y	seconds	Time at which the last 'tickle' of the starter will stop ... starting.  Do not use this directly.  Use the command system or sim/cockpit2/engines/actuators/starter_hit	REPLACED - Use the replacement instead.
 sim/cockpit/engine/clutch_engage	int	y	???	Clutch engaged	
 sim/cockpit/engine/APU_switch	int	y	enum	APU starter switch 0 = off, 1 = on, 2 = start	
 sim/cockpit/engine/APU_running	int	y	boolean	APU running - 1 = on, 0 = off.	
@@ -700,13 +701,17 @@ sim/cockpit/misc/hydraulic_quantity2	float	y	ratio	Hydraulic Quantity system 2 (
 sim/cockpit/misc/hydraulic_quantity3	float	y	ratio	Hydraulic Quantity system 3 (center)	
 sim/cockpit/pressure/bleed_air_on	int	y	boolean	Bleed air is on (legacy)	DEPRECATED - DO NOT USE!!!
 sim/cockpit/pressure/bleed_air_mode	int	y	enum	0=off,1=L,2=B,3=R,4=APU	
-sim/cockpit/pressure/cabin_altitude_set_m_msl	float	y	???	The desired cabin altitude (BEFORE 730 this was incorrectly int type)	
-sim/cockpit/pressure/cabin_vvi_set_m_msec	float	y	???	The desired cabin altitude rate change (BEFORE 730 this was incorrectly int type)	
+sim/cockpit/pressure/cabin_altitude_set_m_msl	float	y	feet	Do not use - units are wrong.  Use cabin_altitude_set_ft	REPLACED - Use the replacement instead.
+sim/cockpit/pressure/cabin_altitude_set_ft	float	y	feet	The desired cabin target altitude in feet.	
+sim/cockpit/pressure/cabin_vvi_set_m_msec	float	y	fpm	Do not use - units are wrong. Use cabin_vvi_set_m_fpm	REPLACED - Use the replacement instead.
+sim/cockpit/pressure/cabin_vvi_set_m_fpm	float	y	fpm	The desired cabin altitude rate change in fpm	
 sim/cockpit/pressure/cabin_pressure_differential_psi	float	y	psi	????	
-sim/cockpit/pressure/cabin_altitude_actual_m_msl	float	y	???	The real cabin altitude (BEFORE 730 this was incorrectly int type). Writeable with override_pressurization	
-sim/cockpit/pressure/cabin_vvi_actual_m_msec	float	y	???	The real cabin altitude rate change (BEFORE 730 this was incorrectly int type). Writeable with override_pressurization	
+sim/cockpit/pressure/cabin_altitude_actual_m_msl	float	y	feet	Do not use - units are wrong. Use cabin_altitude_actual_ft	REPLACED - Use the replacement instead.
+sim/cockpit/pressure/cabin_altitude_actual_ft	float	y	feet	The real cabin altitude in feet.. Writeable with override_pressurization	
+sim/cockpit/pressure/cabin_vvi_actual_m_msec	float	y	fpm	Do not use - units are wrong. Use cabin_vvi_actual_fpm	REPLACED - Use the replacement instead.
+sim/cockpit/pressure/cabin_vvi_actual_fpm	float	y	fpm	The real cabin altitude rate change in feet per minute. Writeable with override_pressurization	
 sim/cockpit/pressure/pressure_test_timeout	float	y	???	Timeout for some kind of pressure test/	
-sim/cockpit/pressure/max_allowable_altitude	float	y	???	Max altitude the plane can keep pressure at?	
+sim/cockpit/pressure/max_allowable_altitude	float	y	feet	Max altitude the plane can keep pressure at?	
 sim/cockpit/pressure/dump_all	int	y	boolean	Pressure dump switch	
 sim/cockpit/pressure/dump_to_alt	int	y	boolean	Pressure dump to altitude switch	
 sim/cockpit/pressure/outflow_valve	float	y	ratio	Pressurization outflow valve ratio. 0 for fully closed, 1 for fully open. Writeable with override_pressurization	
@@ -862,7 +867,7 @@ sim/cockpit/switches/anti_ice_surf_heat_left	int	y	boolean	Turns on surface heat
 sim/cockpit/switches/anti_ice_surf_heat_right	int	y	boolean	Turns on surface heat on the right wing	
 sim/cockpit/switches/anti_ice_surf_boot	int	y	enum	Turns on the wing-surface anti-ice boot, which knocks ice off the leading edge, once a certain thickness has accumulated. 0 = Off, 1 = Continuous, 2 = Auto/Single, 3 = Man	
 sim/cockpit/switches/anti_ice_engine_air	float[16]	y	ratio	????	
-sim/cockpit/switches/anti_ice_auto_ignite	int	y	boolean	Ignition source is turned on automatically on low N1 to prevent flameout	
+sim/cockpit/switches/anti_ice_auto_ignite	int	y	boolean	Ignition source is turned on automatically on low N1 to prevent flameout - Use sim/cockpit2/engine/actuators/auto_ignite_on	REPLACED - Use the replacement instead.
 sim/cockpit/switches/ice_detect	int	y	boolean	Turns on ice detect	
 sim/cockpit/switches/auto_brake_settings	int	y	???	Settings for the autobrake control	
 sim/cockpit/switches/auto_feather_mode	int	y	???	Settings for auto-feathering mode	
@@ -1425,15 +1430,23 @@ sim/flightmodel/cyclic/cyclic_elev_blad_alph	float[16]	n	???	Blade alpha
 sim/flightmodel/cyclic/cyclic_elev_disc_tilt	float[16]	n	???	Disc tilt	
 sim/flightmodel/cyclic/cyclic_elev_command	float[16]	n	???	???	
 sim/flightmodel/cyclic/cyclic_ailn_command	float[16]	n	???	???	
+sim/flightmodel/drogue/drogue_lat_deg	float	y	degrees	Smart-drogue lateral fin displacement from center in degrees.	
+sim/flightmodel/drogue/drogue_vrt_deg	float	y	degrees	Smart-drogue vertical fin displacement from center in degrees.	
+sim/flightmodel/drogue/drogue_vx	double	n	m/s	Smart-drogue vertical speed, world x-axis	
+sim/flightmodel/drogue/drogue_vy	double	n	m/s	Smart-drogue vertical speed, world y-axis	
+sim/flightmodel/drogue/drogue_vz	double	n	m/s	Smart-drogue vertical speed, world z-axis	
+sim/flightmodel/drogue/drogue_x	double	n	meters	Smart-drogue vertical location, world x-axis	
+sim/flightmodel/drogue/drogue_y	double	n	meters	Smart-drogue vertical location, world y-axis	
+sim/flightmodel/drogue/drogue_z	double	n	meters	Smart-drogue vertical location, world z-axis	
 sim/flightmodel/engine/ENGN_N2_	float[16]	y	percent	N2 speed as percent of max (per engine)	
-sim/flightmodel/engine/ENGN_EGT	float[16]	y	ratio	Exhaust Gas Temperature (ratio from min to max)	
-sim/flightmodel/engine/ENGN_ITT	float[16]	y	ratio	Interturbine Temperature per engine (ratio from min to max, min = 0, max = 700)	
-sim/flightmodel/engine/ENGN_CHT	float[16]	y	ratio	Cylinder Head Temperature (ratio from min to max)	
-sim/flightmodel/engine/ENGN_EGT_c	float[16]	y	degc_or_f	EGT (per engine) in degrees  - units depend on plane, label wrong	
-sim/flightmodel/engine/ENGN_ITT_c	float[16]	y	degc_or_f	ITT (per engine) in degrees - units depend on plane, label wrong	
-sim/flightmodel/engine/ENGN_CHT_c	float[16]	y	degc_or_f	CHT (per engine in degrees  - units depend on plane, label wrong	
-sim/flightmodel/engine/ENGN_EGT_CYL_c	float[16][12]	y	degc_or_f	EGT (per engine) in degrees  - units depend on plane, label wrong. Up to 12 cylinders	
-sim/flightmodel/engine/ENGN_CHT_CYL_c	float[16][12]	y	degc_or_f	CHT (per engine in degrees  - units depend on plane, label wrong	
+sim/flightmodel/engine/ENGN_EGT	float[16]	y	ratio	Exhaust Gas Temperature (ratio from min to max) - use sim/flightmodel2/engines/actuators/EGT_deg_cel	REPLACED - Use the replacement instead.
+sim/flightmodel/engine/ENGN_ITT	float[16]	y	ratio	Interturbine Temperature per engine (ratio from min to max, min = 0, max = 700) - use sim/flightmodel2/engines/actuators/ITT_deg_cel	REPLACED - Use the replacement instead.
+sim/flightmodel/engine/ENGN_CHT	float[16]	y	ratio	Cylinder Head Temperature (ratio from min to max) - use sim/flightmodel2/engines/actuators/CHT_deg_cel	REPLACED - Use the replacement instead.
+sim/flightmodel/engine/ENGN_EGT_c	float[16]	y	degc_or_f	EGT (per engine) in degrees  - units depend on plane, label wrong - use sim/flightmodel2/engines/actuators/EGT_deg_cel	REPLACED - Use the replacement instead.
+sim/flightmodel/engine/ENGN_ITT_c	float[16]	y	degc_or_f	ITT (per engine) in degrees - units depend on plane, label wrong - use sim/flightmodel2/engines/actuators/ITT_deg_cel	REPLACED - Use the replacement instead.
+sim/flightmodel/engine/ENGN_CHT_c	float[16]	y	degc_or_f	CHT (per engine in degrees  - units depend on plane, label wrong - use sim/flightmodel2/engines/actuators/CHT_deg_cel	REPLACED - Use the replacement instead.
+sim/flightmodel/engine/ENGN_EGT_CYL_c	float[16][12]	y	degc_or_f	EGT (per engine) in degrees  - units depend on plane, label wrong. Up to 12 cylinders - use use sim/flightmodel2/engines/actuators/EGT_CYL_cel	REPLACED - Use the replacement instead.
+sim/flightmodel/engine/ENGN_CHT_CYL_c	float[16][12]	y	degc_or_f	CHT (per engine in degrees  - units depend on plane, label wrong.  Up to 12 cylinders - use use sim/flightmodel2/engines/actuators/CHT_CYL_cel	REPLACED - Use the replacement instead.
 sim/flightmodel/engine/ENGN_bat_amp	float[16]	y	ampere	Battery amps (per engine)	
 sim/flightmodel/engine/ENGN_bat_volt	float[16]	y	volt	Battery volts (per engine)	
 sim/flightmodel/engine/ENGN_cowl	float[16]	y	ratio	Cowl flaps control (per engine) 0 = closed, 1 = open	
@@ -1445,6 +1458,7 @@ sim/flightmodel/engine/ENGN_mixt	float[16]	y	ratio	Mixture Control (per engine),
 sim/flightmodel/engine/ENGN_MPR	float[16]	y	inHg	MPR (per engine)	
 sim/flightmodel/engine/ENGN_N1_	float[16]	y	percent	N1 speed as percent of max (per engine)	
 sim/flightmodel/engine/ENGN_oil_press_psi	float[16]	y	psi	Oil pressure (per engine) in PSI	
+sim/flightmodel/engine/ENGN_fuel_press_psi	float[16]	y	PSI	Fuel pressure per engine	
 sim/flightmodel/engine/ENGN_oil_temp_c	float[16]	y	degc_or_f	Oil temp (per engine) in degs - units depend on plane, dref name wrong	
 sim/flightmodel/engine/ENGN_oil_temp	float[16]	y	ratio	Oil pressure (per engine) as ratio of max	
 sim/flightmodel/engine/ENGN_oil_press	float[16]	y	ratio	Oil temp (per engine) a ratio of max	
@@ -1608,6 +1622,8 @@ sim/flightmodel/misc/slung_obj_the	float	n	degrees	Orientation of slung load obj
 sim/flightmodel/misc/slung_obj_phi	float	n	degrees	Orientation of slung load object, roll	
 sim/flightmodel/misc/slung_load_min_xyz	float[3]	y	meters	Bounding box minima for the slung load from its CG	
 sim/flightmodel/misc/slung_load_max_xyz	float[3]	y	meters	Bounding box maxima for the slugn load from its CG	
+sim/flightmodel/misc/line_aircraft_xyz	float[3]	n	meters	Endpoint location of the line connecting slung loads, towplanes, etc, that is connected to the users' aircraft	
+sim/flightmodel/misc/line_payload_xyz	float[3]	n	meters	Endpoint location of the line connecting slung loads, towplanes, etc, that is connected to the slung load or other airplane	
 sim/flightmodel/ground/surface_texture_type	int	y	enum	Writable only with override_groundplane. 0=None, 1=Water, 2=Concrete, 3=Asphalt, 4=grass, 5=Dirt, 6=Gravel, 7=Lake, 8=Snow, 9=Shoulder, 10=Blastpad, 11=Ground, 12=Object	
 sim/flightmodel/ground/plugin_ground_center	float[3]	y	meters	Location of a pt on the ground in local coords	
 sim/flightmodel/ground/plugin_ground_slope_normal	float[3]	y	vector	Normal vector of the terrain (must be normalized)	
@@ -1706,6 +1722,7 @@ sim/flightmodel/weight/m_fuel2	float	y	kgs	Fuel Tank 2 Weight
 sim/flightmodel/weight/m_fuel3	float	y	kgs	Fuel Tank 3 Weight	
 sim/flightmodel/weight/m_jettison	float	y	kgs	Jettison	
 sim/flightmodel/weight/m_fuel_total	float	n	kgs	Fuel Total Weight	
+sim/flightmodel/weight/m_jettison_kg_sec	float	n	kg/sec	Jettison rate for water etc. kg/sec	
 sim/graphics/animation/draw_object_x	float	n	float	X position in cartesian space of currently drawn object	
 sim/graphics/animation/draw_object_y	float	n	float	Y position in cartesian space of currently drawn object	
 sim/graphics/animation/draw_object_z	float	n	float	Z position in cartesian space of currently drawn object	
@@ -1843,7 +1860,7 @@ sim/graphics/misc/default_scroll_pos	float	n	pixels	Default position for a scrol
 sim/graphics/misc/current_scroll_pos	float	y	pixels	Current position of that panel	
 sim/graphics/misc/default_scroll_pos_x	float	n	pixels	Default position for a scrolling plane panel	
 sim/graphics/misc/current_scroll_pos_x	float	y	pixels	Current position of that panel	
-sim/graphics/scenery/current_planet	int	n	enum	What planet are we on?  (Earth = 0, mars = 1)	
+sim/graphics/scenery/current_planet	int	n	enum	What planet are we on?  (Earth = 0, mars = 1)	DEPRECATED - DO NOT USE!!!
 sim/graphics/scenery/percent_lights_on	float	n	percent	What percentage of city lights are on as night hits	
 sim/graphics/scenery/sun_pitch_degrees	float	n	degrees	Sun pitch from flat in OGL coordinates	
 sim/graphics/scenery/sun_heading_degrees	float	n	degrees	Sun heading from true north in OGL coordinates	
@@ -1921,8 +1938,6 @@ sim/graphics/view/local_map_l	float	n	pixels	Bounds of the local map window duri
 sim/graphics/view/local_map_b	float	n	pixels	Bounds of the local map window during callbacks - bottom	
 sim/graphics/view/local_map_r	float	n	pixels	Bounds of the local map window during callbacks - right	
 sim/graphics/view/local_map_t	float	n	pixels	Bounds of the local map window during callbacks - top	
-sim/graphics/view/dome_offset_heading	float[16]	y	degrees	The horizontal offset for this pass, in degrees	
-sim/graphics/view/dome_offset_pitch	float[16]	y	degrees	The vertical offset for this pass, in degrees	
 sim/graphics/view/eq_trackir	int	n	boolean	Does the user have trackIR hardware enabled	
 sim/graphics/view/hide_yoke	int	y	boolean	Is the yoke visible in the 3-d cockpit?	
 sim/graphics/view/projection_matrix	float[16]	n	Matrix4x4	The current projection matrix - valid only during draw callbacks	
@@ -2344,9 +2359,9 @@ sim/multiplayer/position/plane10_throttle	float[16]	y	ratio	Plane 10 Percent of 
 sim/multiplayer/position/plane10_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane10_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane10_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane10_lat	double	y	degs	Plane 10 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane10_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane10_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane10_lat	double	n	degs	Plane 10 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane10_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane10_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane10_v_x	float	y	m/s	Plane 10 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane10_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane10_v_z	float	y	m/s	manipulate the plane.	
@@ -2367,9 +2382,9 @@ sim/multiplayer/position/plane11_throttle	float[16]	y	ratio	Plane 11 Percent of 
 sim/multiplayer/position/plane11_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane11_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane11_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane11_lat	double	y	degs	Plane 11 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane11_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane11_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane11_lat	double	n	degs	Plane 11 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane11_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane11_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane11_v_x	float	y	m/s	Plane 11 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane11_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane11_v_z	float	y	m/s	manipulate the plane.	
@@ -2390,9 +2405,9 @@ sim/multiplayer/position/plane12_throttle	float[16]	y	ratio	Plane 12 Percent of 
 sim/multiplayer/position/plane12_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane12_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane12_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane12_lat	double	y	degs	Plane 12 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane12_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane12_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane12_lat	double	n	degs	Plane 12 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane12_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane12_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane12_v_x	float	y	m/s	Plane 12 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane12_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane12_v_z	float	y	m/s	manipulate the plane.	
@@ -2413,9 +2428,9 @@ sim/multiplayer/position/plane13_throttle	float[16]	y	ratio	Plane 13 Percent of 
 sim/multiplayer/position/plane13_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane13_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane13_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane13_lat	double	y	degs	Plane 13 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane13_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane13_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane13_lat	double	n	degs	Plane 13 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane13_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane13_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane13_v_x	float	y	m/s	Plane 13 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane13_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane13_v_z	float	y	m/s	manipulate the plane.	
@@ -2436,9 +2451,9 @@ sim/multiplayer/position/plane14_throttle	float[16]	y	ratio	Plane 14 Percent of 
 sim/multiplayer/position/plane14_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane14_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane14_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane14_lat	double	y	degs	Plane 14 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane14_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane14_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane14_lat	double	n	degs	Plane 14 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane14_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane14_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane14_v_x	float	y	m/s	Plane 14 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane14_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane14_v_z	float	y	m/s	manipulate the plane.	
@@ -2459,9 +2474,9 @@ sim/multiplayer/position/plane15_throttle	float[16]	y	ratio	Plane 15 Percent of 
 sim/multiplayer/position/plane15_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane15_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane15_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane15_lat	double	y	degs	Plane 15 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane15_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane15_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane15_lat	double	n	degs	Plane 15 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane15_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane15_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane15_v_x	float	y	m/s	Plane 15 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane15_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane15_v_z	float	y	m/s	manipulate the plane.	
@@ -2482,9 +2497,9 @@ sim/multiplayer/position/plane16_throttle	float[16]	y	ratio	Plane 16 Percent of 
 sim/multiplayer/position/plane16_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane16_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane16_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane16_lat	double	y	degs	Plane 16 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane16_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane16_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane16_lat	double	n	degs	Plane 16 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane16_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane16_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane16_v_x	float	y	m/s	Plane 16 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane16_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane16_v_z	float	y	m/s	manipulate the plane.	
@@ -2505,9 +2520,9 @@ sim/multiplayer/position/plane17_throttle	float[16]	y	ratio	Plane 17 Percent of 
 sim/multiplayer/position/plane17_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane17_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane17_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane17_lat	double	y	degs	Plane 17 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane17_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane17_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane17_lat	double	n	degs	Plane 17 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane17_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane17_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane17_v_x	float	y	m/s	Plane 17 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane17_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane17_v_z	float	y	m/s	manipulate the plane.	
@@ -2528,9 +2543,9 @@ sim/multiplayer/position/plane18_throttle	float[16]	y	ratio	Plane 18 Percent of 
 sim/multiplayer/position/plane18_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane18_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane18_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane18_lat	double	y	degs	Plane 18 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane18_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane18_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane18_lat	double	n	degs	Plane 18 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane18_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane18_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane18_v_x	float	y	m/s	Plane 18 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane18_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane18_v_z	float	y	m/s	manipulate the plane.	
@@ -2551,9 +2566,9 @@ sim/multiplayer/position/plane19_throttle	float[16]	y	ratio	Plane 19 Percent of 
 sim/multiplayer/position/plane19_yolk_pitch	float	y	ratio	Use sim/multiplayer/controls/yoke_pitch_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane19_yolk_roll	float	y	ratio	Use sim/multiplayer/controls/yoke_roll_ratio	REPLACED - Use the replacement instead.
 sim/multiplayer/position/plane19_yolk_yaw	float	y	ratio	Use sim/multiplayer/controls/yoke_heading_ratio	REPLACED - Use the replacement instead.
-sim/multiplayer/position/plane19_lat	double	y	degs	Plane 19 Lat lon and elevation.  NOTE: your plugin must set the plane's	
-sim/multiplayer/position/plane19_lon	double	y	degs	position by writing x, y and z.  Also if another plugin is updating plane	
-sim/multiplayer/position/plane19_el	double	y	meters	position then these will not be accurate unless the plane updates them.	
+sim/multiplayer/position/plane19_lat	double	n	degs	Plane 19 Lat lon and elevation.  NOTE: your plugin must set the plane's	
+sim/multiplayer/position/plane19_lon	double	n	degs	position by writing x, y and z.  Also if another plugin is updating plane	
+sim/multiplayer/position/plane19_el	double	n	meters	position then these will not be accurate unless the plane updates them.	
 sim/multiplayer/position/plane19_v_x	float	y	m/s	Plane 19 cartesian velocities.  These may not be accurate if another plugin	
 sim/multiplayer/position/plane19_v_y	float	y	m/s	is controlling the plane and not updating this data.  You cannot use these to	
 sim/multiplayer/position/plane19_v_z	float	y	m/s	manipulate the plane.	
@@ -2583,9 +2598,9 @@ sim/physics/g_sealevel	float	n	???	gravitational acceleration of earth AT SEA LE
 sim/physics/rho_water	float	n	???	rho of water	
 sim/physics/metric_temp	int	y	boolean	Are we showing metric temperature indications	
 sim/physics/metric_press	int	y	boolean	Are we showing metric pressure indications	
-sim/operation/failures/hydraulic_pressure_ratio	float	n	any	Hydraulic pressure, Plane Maker units	
-sim/operation/failures/hydraulic_pressure_ratio2	float	n	any	Hydraulic pressure, Plane Maker units	
-sim/operation/failures/hydraulic_pressure_ratio_3	float	n	any	Hydraulic pressure, Plane Maker units	
+sim/operation/failures/hydraulic_pressure_ratio	float	n	any	Hydraulic pressure, Plane Maker units - use sim/cockpit2/hydraulics/indicators/hydraulic_pressure_1	REPLACED - Use the replacement instead.
+sim/operation/failures/hydraulic_pressure_ratio2	float	n	any	Hydraulic pressure, Plane Maker units - use sim/cockpit2/hydraulics/indicators/hydraulic_pressure_2	REPLACED - Use the replacement instead.
+sim/operation/failures/hydraulic_pressure_ratio_3	float	n	any	Hydraulic pressure, Plane Maker units - use sim/cockpit2/hydraulics/indicators/hydraulic_pressure_3	REPLACED - Use the replacement instead.
 sim/operation/failures/oil_power_thrust_ratio	float[16]	n	ratio	Oil power or thrust ratio	
 sim/operation/failures/enable_random_falures	int	y	boolean	Use enable_random_failures	REPLACED - Use the replacement instead.
 sim/operation/failures/enable_random_failures	int	y	boolean	Enable random failures basde on mean time between failures	
@@ -2597,6 +2612,7 @@ sim/operation/failures/rel_door_open	int	y	failure_enum	Door Open
 sim/operation/failures/rel_ex_power_on	int	y	failure_enum	External power is on	
 sim/operation/failures/rel_pass_o2_on	int	y	failure_enum	Passenger oxygen on	
 sim/operation/failures/rel_fuelcap	int	y	failure_enum	Fuel Cap left off	
+sim/operation/failures/rel_fuel_leak	int	y	failure_enum	Fuel leak (slow leak of fuel not seen by the fuel totalizer)	
 sim/operation/failures/rel_fuel_water	int	y	failure_enum	Water in fuel	
 sim/operation/failures/rel_fuel_type	int	y	failure_enum	Wrong fuel type - JetA for props or Avgas for jets!	
 sim/operation/failures/rel_fuel_block0	int	y	failure_enum	Fuel tank filter is blocked - tank 1	
@@ -2610,10 +2626,15 @@ sim/operation/failures/rel_fuel_block7	int	y	failure_enum	Fuel tank filter is bl
 sim/operation/failures/rel_fuel_block8	int	y	failure_enum	Fuel tank filter is blocked - tank 9	
 sim/operation/failures/rel_vasi	int	y	failure_enum	VASIs Inoperative	
 sim/operation/failures/rel_rwy_lites	int	y	failure_enum	Runway lights Inoperative	
-sim/operation/failures/rel_bird_strike	int	y	failure_enum	Bird has hit the plane	
+sim/operation/failures/rel_bird_strike_eng1	int	y	failure_enum	Bird has hit the plane - fail random systems	
+sim/operation/failures/rel_bird_strike_eng2	int	y	failure_enum	Bird has hit the plane - fail engine 1	
+sim/operation/failures/rel_bird_strike	int	y	failure_enum	Bird has hit the plane - fail engine 2	
 sim/operation/failures/rel_wind_shear	int	y	failure_enum	Wind shear/microburst	
 sim/operation/failures/rel_smoke_cpit	int	y	failure_enum	Smoke in cockpit	
 sim/operation/failures/rel_brown_out	int	y	failure_enum	Induce dusty brown-out	
+sim/operation/failures/rel_flt_incursion	int	y	failure_enum	Runway incursion in-air	
+sim/operation/failures/rel_rwy_incursion_1	int	y	failure_enum	Runway incursion - aircraft near runway	
+sim/operation/failures/rel_rwy_incursion_2	int	y	failure_enum	Runway incursion - aircraft on runway	
 sim/operation/failures/rel_esys	int	y	failure_enum	Electrical System (Bus 1)	
 sim/operation/failures/rel_esys2	int	y	failure_enum	Electrical System (Bus 2)	
 sim/operation/failures/rel_esys3	int	y	failure_enum	Electrical System (Bus 3)	
@@ -3410,7 +3431,6 @@ sim/operation/override/override_wing_forces	int	y	boolean	Overrides all wing cal
 sim/operation/override/override_engine_forces	int	y	boolean	Overrides all engine calculations - write to prop LMN and g_nrml/side/axil.	
 sim/operation/override/override_gear_forces	int	y	boolean	Overrides all gear calculations - write to gear LMN and g_nrml/side/axil.	
 sim/operation/override/override_boats	int[2]	y	boolean	Overrides speed, heading, and rocking of boats. index 0=carrier, 1=frigate	
-sim/operation/override/override_clouds	int	y	boolean	Overrides building and drawing of clouds as well as white-out-in-cloud effects	
 sim/operation/override/override_wheel_steer	int	y	boolean	Overrides the steering of individual gear from tiller/rudder.	
 sim/operation/override/override_airport_lites	int	y	boolean	Overrides when the airport lights go on and off.	
 sim/operation/override/override_fuel_system	int	y	boolean	Turns off transfer and dump and lets the plugin decide if the engine gets fuel	
@@ -3423,6 +3443,8 @@ sim/operation/override/override_pressurization	int	y	boolean	Override the sims p
 sim/operation/override/override_oxygen_system	int	y	boolean	Override the sims crew and passenger oxygen system, so a plugin can control the oxygen system itself	
 sim/operation/override/override_slung_load_size	int	y	boolean	Override slung load size calculation - makes sim/flightmodel/misc/jett_size writable.	
 sim/operation/override/override_wake_turbulence	int	y	boolean	Overrides and turns off X-plane's simulation of wake turbulence	
+sim/operation/override/override_drogue	int	y	boolean	Overrides control of the refueling drogue.  Write to sim/flightmodel/drogue to control	
+sim/operation/override/override_GPU_volts	int	y	Boolean	Override GPU voltage, for specifying custom GPU cart behavior	
 sim/operation/prefs/startup_running	int	y	boolean	Start up with the plane running?	
 sim/operation/prefs/warn_overspeed	int	y	boolean	Warn if we exceed max airframe speed	
 sim/operation/prefs/warn_overgforce	int	y	boolean	Warn if we exceed max g-forces on aircraft	
@@ -3483,7 +3505,7 @@ sim/operation/sound/amb_airport_barren_far_ratio	float[4]	n
 sim/operation/sound/amb_airport_low_near_ratio	float[4]	n	
 sim/operation/sound/amb_airport_low_far_ratio	float[4]	n	
 sim/operation/sound/amb_road_distance	float[4]	n	
-sim/operation/windows/system_window	int	n	HWND	X-Plane's system native window as an int (either an HWND or WindowRef pre 102)	
+sim/operation/windows/system_window	int	n	HWND	X-Plane's system native window as an int (either an HWND or WindowRef pre 102)	DEPRECATED - DO NOT USE!!!
 sim/operation/windows/system_window_64	int[2]	n	HWND	X-Plane's system native window as an array of two ints - low 32 bits first (either an HWND or WindowRef)	
 sim/test/test_float	float	y	ratio	This test dataref is used internally for testing our models	
 sim/time/timer_is_running_sec	int	y	boolean	Is the timer running?	
@@ -3622,9 +3644,9 @@ sim/weather/wind_altitude_msl_m[2]	float	y	meters	>= 0. The center altitude of t
 sim/weather/wind_direction_degt[0]	float	y	degrees	[0 - 360] The direction the wind is blowing from in degrees from true north clockwise.	REPLACED - Use the replacement instead.
 sim/weather/wind_direction_degt[1]	float	y	degrees	[0 - 360] The direction the wind is blowing from in degrees from true north clockwise.	REPLACED - Use the replacement instead.
 sim/weather/wind_direction_degt[2]	float	y	degrees	[0 - 360] The direction the wind is blowing from in degrees from true north clockwise.	REPLACED - Use the replacement instead.
-sim/weather/wind_speed_kt[0]	float	y	kts	>= 0. The wind speed in knots.	REPLACED - Use the replacement instead.
-sim/weather/wind_speed_kt[1]	float	y	kts	>= 0. The wind speed in knots.	REPLACED - Use the replacement instead.
-sim/weather/wind_speed_kt[2]	float	y	kts	>= 0. The wind speed in knots.	REPLACED - Use the replacement instead.
+sim/weather/wind_speed_kt[0]	float	y	mtrs/sec	>= 0. The wind speed in meters per second (dataref name is wrong). Use new datarefs instead	REPLACED - Use the replacement instead.
+sim/weather/wind_speed_kt[1]	float	y	mtrs/sec	>= 0. The wind speed in meters per second (dataref name is wrong). Use new datarefs instead	REPLACED - Use the replacement instead.
+sim/weather/wind_speed_kt[2]	float	y	mtrs/sec	>= 0. The wind speed in meters per second (dataref name is wrong). Use new datarefs instead	REPLACED - Use the replacement instead.
 sim/weather/shear_direction_degt[0]	float	y	degrees	[0 - 360]. The direction for a wind shear, per above.	REPLACED - Use the replacement instead.
 sim/weather/shear_direction_degt[1]	float	y	degrees	[0 - 360]. The direction for a wind shear, per above.	REPLACED - Use the replacement instead.
 sim/weather/shear_direction_degt[2]	float	y	degrees	[0 - 360]. The direction for a wind shear, per above.	REPLACED - Use the replacement instead.
@@ -3694,7 +3716,7 @@ sim/weather/region/rain_percent	float	y	ratio	[0.0 - 1.0] The percentage of rain
 sim/weather/region/change_mode	int	y	enum	How the weather is changing. 0 = Rapidly Improving, 1 = Improving, 2 = Gradually Improving, 3 = Static, 4 = Gradually Deteriorating, 5 = Deteriorating, 6 = Rapidly Deteriorating, 7 = Using Real Weather	
 sim/weather/region/weather_source	int	n	enum	What system is currently controlling the weather. 0 = Preset, 1 = Real Weather, 2 = Controlpad, 3 = Plugin.	
 sim/weather/region/update_immediately	int	y	bool	If this is true, any weather region changes EXCEPT CLOUDS will take place immediately instead of at the next update interval (currently 60 seconds).	
-sim/weather/region/atmosphere_alt_levels_m	float[13]	n	meters	The altitudes for the ten atmospheric layers returned in other sim/weather/region datarefs.	
+sim/weather/region/atmosphere_alt_levels_m	float[13]	n	meters	The altitudes for the thirteen atmospheric layers returned in other sim/weather/region datarefs.	
 sim/weather/region/wind_altitude_msl_m	float[13]	y	meters	>= 0. The center altitude of this layer of wind in MSL meters.	
 sim/weather/region/wind_speed_msc	float[13]	y	kts	>= 0. The wind speed in knots.	
 sim/weather/region/wind_direction_degt	float[13]	y	degrees	[0 - 360] The direction the wind is blowing from in degrees from true north clockwise.	
@@ -4062,14 +4084,23 @@ sim/cockpit2/electrical/battery_voltage_actual_volts	float[8]	y	volts	Actual bat
 sim/cockpit2/electrical/battery_voltage_indicated_volts	float[8]	y	volts	Indicated battery voltage in, umm, volts? ...The indication may be different than the actual voltage!	
 sim/cockpit2/electrical/generator_on	int[8]	y	boolean	Generator turned on, 0 or 1.	
 sim/cockpit2/electrical/generator_amps	float[8]	n	amps	Generator amperage.	
+sim/cockpit2/electrical/generator_volts	float[8]	n	volts	Generator voltage the generator can produce, even if its external circuit isn't connected (yet).	
 sim/cockpit2/electrical/air_driven_generator_on	int	n	boolean	Air-driven generator extended	
 sim/cockpit2/electrical/APU_generator_on	int	y	boolean	APU generator is turned on, 0 or 1.	
 sim/cockpit2/electrical/APU_generator_amps	float	y	amps	APU generator amperage.	
+sim/cockpit2/electrical/APU_generator_volts	float	n	volts	APU generator voltage it can produce, even if its external circuit isn't connected (yet).	
 sim/cockpit2/electrical/APU_starter_switch	int	y	enum	APU power switch, 0 is off, 1 is on, 2 is start-er-up!	
 sim/cockpit2/electrical/APU_N1_percent	float	n	percent	N1 of the APU	
 sim/cockpit2/electrical/APU_EGT_c	float	n	celsius	EGT of the APU	
 sim/cockpit2/electrical/APU_door	float	n	ratio	APU door open ratio	
 sim/cockpit2/electrical/APU_running	int	n	boolean	APU actually running, 0 or 1.	
+sim/cockpit2/electrical/GPU_generator_on	int	y	boolean	GPU external power generator is turned on, 0 or 1.	
+sim/cockpit2/electrical/GPU_generator_amps	float	y	amps	GPU external power generator amperage	
+sim/cockpit2/electrical/GPU_generator_volts	float	y	volts	GPU external power generator voltage	
+sim/cockpit2/electrical/GPU_can_be_called_for	int	n	Boolean	True if the aircraft is in a situation where ground power can be requested (e.g. a capable airport, on the ground, not flying)	
+sim/cockpit2/electrical/RAT_generator_on	int	y	boolean	air-driven generator is turned on, 0 or 1.	
+sim/cockpit2/electrical/RAT_generator_amps	float	y	amps	air-driven generator amperage	
+sim/cockpit2/electrical/RAT_generator_volts	float	n	volts	air-driven generator voltage	
 sim/cockpit2/electrical/cross_tie	int	y	boolean	Switch to connect the two busses together - power from one feeds the other.  0 or 1.	
 sim/cockpit2/electrical/dc_voltmeter_selection	int	n	enum	Volt-meter selection (0=external,1=ctr,2=lft,3=rgt,4=tpl,5=bat - use cmnds to set!	
 sim/cockpit2/electrical/dc_voltmeter_value	float	n	voltage	volt-meter value	
@@ -4131,6 +4162,7 @@ sim/cockpit2/engine/actuators/clutch_ratio	float[1]	y	ratio	XP10: the ratio of t
 sim/cockpit2/engine/actuators/manual_feather_prop	float[16]	y	boolean	override and activate the feather, no matter what any auto-feather logic does.	
 sim/cockpit2/engine/actuators/N1_target_bug	float[16]	y	percent	N1 bug (target for thrust reference), %	
 sim/cockpit2/engine/actuators/EPR_target_bug	float[16]	y	percent	EPR bug (target for thrust reference), %	
+sim/cockpit2/engine/actuators/starter_fuel_flow_ratio	float[16]	y	Ratio	Ratio of normal fuel flow allowed by starter procedure - 0 before starter button is pressed and 1.0 when startup sequence is complete. This applies to turbines and recip engines but not electric motors.	
 sim/cockpit2/engine/indicators/N1_percent	float[16]	y	percent	N1, %.	
 sim/cockpit2/engine/indicators/N2_percent	float[16]	y	percent	N2, %.	
 sim/cockpit2/engine/indicators/MPR_in_hg	float[16]	y	inches_hg	Manifold pressure, inches HG.	
@@ -4138,11 +4170,16 @@ sim/cockpit2/engine/indicators/EPR_ratio	float[16]	n	ratio	EPR, ratio.
 sim/cockpit2/engine/indicators/torque_n_mtr	float[16]	y	newton_meters	Torque, NM.	
 sim/cockpit2/engine/indicators/fuel_flow_kg_sec	float[16]	y	kilograms/second	total fuel flow, kilograms per second.	
 sim/cockpit2/engine/indicators/fuel_flow_dry_kg_sec	float[16]	n	kilograms/second	dry fuel flow, kilograms per second.	
-sim/cockpit2/engine/indicators/ITT_deg_C	float[16]	y	degrees_C_or_F	ITT, deg.  Dataref label is wrong, units vary by plane.	
-sim/cockpit2/engine/indicators/EGT_deg_C	float[16]	n	degrees_C_or_F	EGT, deg.  Dataref label is wrong, units vary by plane.	
-sim/cockpit2/engine/indicators/CHT_deg_C	float[16]	n	degrees_C_or_F	CHT, deg.  Dataref label is wrong, units vary by plane.	
-sim/cockpit2/engine/indicators/EGT_CYL_deg_C	float[16][12]	y	degrees_C_or_F	EGT, deg.  Dataref label is wrong, units vary by plane. Up to 12 cylinders	
-sim/cockpit2/engine/indicators/CHT_CYL_deg_C	float[16][12]	y	degrees_C_or_F	CHT, deg.  Dataref label is wrong, units vary by plane. Up to 12 cylinders	
+sim/cockpit2/engine/indicators/ITT_deg_C	float[16]	y	degrees_C_or_F	ITT, deg.  Dataref label is wrong, units vary by plane. - use ITT_deg_C_or_F	REPLACED - Use the replacement instead.
+sim/cockpit2/engine/indicators/ITT_deg_cel	float[16]	y	degrees_C_or_F	ITT, deg.  units vary by plane.	
+sim/cockpit2/engine/indicators/EGT_deg_C	float[16]	n	degrees_C_or_F	EGT, deg.  Dataref label is wrong, units vary by plane. - use EGT_deg_C_or_F	REPLACED - Use the replacement instead.
+sim/cockpit2/engine/indicators/EGT_deg_cel	float[16]	y	degrees_C_or_F	EGT, deg.  units vary by plane.	
+sim/cockpit2/engine/indicators/CHT_deg_C	float[16]	n	degrees_C_or_F	CHT, deg.  Dataref label is wrong, units vary by plane.- use CHT_deg_C_or_F	REPLACED - Use the replacement instead.
+sim/cockpit2/engine/indicators/CHT_deg_cel	float[16]	y	degrees_C	CHT, deg.  ALWAYS CELCIUS	
+sim/cockpit2/engine/indicators/EGT_CYL_deg_C	float[16][12]	y	degrees_C_or_F	EGT, deg.  Dataref label is wrong, units vary by plane. Up to 12 cylinders - use EGT_CYL_deg_C_or_F	REPLACED - Use the replacement instead.
+sim/cockpit2/engine/indicators/EGT_CYL_deg_cel	float[16][12]	y	degrees_C_or_F	EGT, deg.  units vary by plane. Up to 12 cylinders	
+sim/cockpit2/engine/indicators/CHT_CYL_deg_C	float[16][12]	y	degrees_C_or_F	CHT, deg.  Dataref label is wrong, units vary by plane. Up to 12 cylinders  Use CHT_CYL_deg_C_or_F	REPLACED - Use the replacement instead.
+sim/cockpit2/engine/indicators/CHT_CYL_deg_cel	float[16][12]	y	degrees_C_or_F	CHT, deg.  units vary by plane. Up to 12 cylinders	
 sim/cockpit2/engine/indicators/fuel_pressure_psi	float[16]	y	pounds/square_inch	Fuel pressure, psi.	
 sim/cockpit2/engine/indicators/oil_pressure_psi	float[16]	y	pounds/square_inch	Oil pressure, psi.	
 sim/cockpit2/engine/indicators/oil_temperature_deg_C	float[16]	y	degrees_C_or_F	Oil temp, deg.    Dataref label is wrong, units vary by plane.	
@@ -4166,6 +4203,9 @@ sim/cockpit2/fuel/fuel_tank_transfer_from	int	y	enum	0=none,1=left,2=center,3=ri
 sim/cockpit2/fuel/fuel_tank_pump_on	int[9]	y	boolean	True if the pump for this tank is on.	
 sim/cockpit2/fuel/showing_aux	int	n	boolean	True if user is holding down the aux-tank button.	
 sim/cockpit2/fuel/fuel_quantity	float[9]	n	kgs	Indicated fuel level per tank	
+sim/cockpit2/fuel/fuel_temp_at_fuel_tank	float[9]	n	degreesC	Fuel temperature in each tank, gets cold-soaked at altitude	
+sim/cockpit2/fuel/fuel_temp_at_oil_cooler	float[16]	n	degreesC	Fuel temperature after it has passed through the fuel-oil heat exchanger, to warm up the fuel before it goes into the engine	
+sim/cockpit2/fuel/fuel_tank_source_for_engine	int[16]	n	enum	Which tank excess heated fuel goes back into - this is NOT the fuel selector!	
 sim/cockpit2/fuel/fuel_totalizer_init_kg	float	y	kg	Total fuel on board the fuel totalizer was initialized with	
 sim/cockpit2/fuel/fuel_totalizer_sum_kg	float	y	kg	Total accumulated fuel used by all engines since totalizer initialization	
 sim/cockpit2/fuel/fuel_totalizer_sum_engine_kg	float[16]	y	kg	Total accumulated fuel used by this engine N since totalizer initialization	
@@ -4329,7 +4369,7 @@ sim/cockpit2/ice/ice_tail_tks_right_on	int	y	enum	De-ice switch, 0, 1, or 2.  De
 sim/cockpit2/ice/ice_tail_boots_inflation	float[2]	y	ratio	De-icing boots inflation ratio, left and right tailplane	
 sim/cockpit2/ice/anti_ice_engine_air	float[16]	y	ratio	De-Ice ratio.  (Description needed)	
 sim/cockpit2/ice/anti_ice_engine_air_b	float[16]	y	ratio	De-Ice ratio.  (Description needed)	
-sim/cockpit2/ice/ice_auto_ignite_on	int	y	boolean	De-ice switch, 0 or 1.  De-ice - auto-ignition. This switch turns on a continuous ignition source in the engine to automatically relight it if there is a flameout.	
+sim/cockpit2/ice/ice_auto_ignite_on	int	y	boolean	De-ice switch, 0 or 1.  De-ice - auto-ignition. This switch turns on a continuous ignition source in the engine to automatically relight it if there is a flameout. Use sim/cockpit2/engine/actuators/auto_ignite_on	REPLACED - Use the replacement instead.
 sim/cockpit2/ice/ice_detect_on	int	y	boolean	De-ice switch, 0 or 1.  Ice-detection: Turn this switch on to enable ice-detection... if the system detects ice, it will light up the ICE annunciator.	
 sim/cockpit2/ice/ice_tks_fluid_liter	float	y	liter	TKS de-icing fluid reserve. See sim/aircraft/specialcontrols/acf_tks_cap_liter for the plane's total capacity.	
 sim/cockpit2/ice/tks_backup_pump	int	y	boolean	Backup pump selected permanently on for TKS FIKI	
@@ -4780,70 +4820,70 @@ sim/cockpit2/radios/indicators/landing_alt_pilot	float	n	feet	Barometric altitud
 sim/cockpit2/radios/indicators/landing_alt_copilot	float	n	feet	Copilot FMS: Barometric altitude (MSL) of the selected takeoff or landing runway.	
 sim/cockpit2/radios/indicators/HAT_pilot	float	n	feet	Height above threshold: Barometric height difference between landing threshold and current altitude. This is not equal to radio altimeter! Radio altimeter sees hills before the airport, this doesn't!	
 sim/cockpit2/radios/indicators/HAT_copilot	float	n	feet	Copilot FMS: Height above threshold: Barometric height difference between landing threshold and current altitude. This is not equal to radio altimeter! Radio altimeter sees hills before the airport, this doesn't!	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line0	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line1	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line2	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line3	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line4	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line5	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line6	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line7	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line8	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line9	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line10	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line11	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line12	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line13	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line14	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_text_line15	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line0	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line1	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line2	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line3	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line4	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line5	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line6	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line7	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line8	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line9	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line10	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line11	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line12	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line13	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line14	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu1_style_line15	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line0	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line1	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line2	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line3	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line4	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line5	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line6	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line7	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line8	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line9	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line10	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line11	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line12	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line13	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line14	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_text_line15	byte[96]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line0	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line1	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line2	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line3	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line4	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line5	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line6	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line7	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line8	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line9	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line10	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line11	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line12	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line13	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line14	byte[24]	n	
-sim/cockpit2/radios/indicators/fms_cdu2_style_line15	byte[24]	n	
+sim/cockpit2/radios/indicators/fms_cdu1_text_line0	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line1	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line2	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line3	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line4	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line5	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line6	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line7	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line8	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line9	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line10	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line11	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line12	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line13	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line14	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_text_line15	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu1_style_line0	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line1	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line2	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line3	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line4	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line5	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line6	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line7	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line8	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line9	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line10	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line11	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line12	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line13	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line14	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu1_style_line15	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_text_line0	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line1	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line2	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line3	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line4	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line5	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line6	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line7	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line8	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line9	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line10	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line11	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line12	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line13	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line14	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_text_line15	byte[]	n	string	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/
+sim/cockpit2/radios/indicators/fms_cdu2_style_line0	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line1	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line2	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line3	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line4	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line5	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line6	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line7	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line8	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line9	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line10	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line11	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line12	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line13	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line14	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
+sim/cockpit2/radios/indicators/fms_cdu2_style_line15	byte[24]	n	bitfield	See https://developer.x-plane.com/article/datarefs-for-the-cdu-screen/	
 sim/cockpit2/switches/avionics_power_on	int	y	boolean	Switch, 0 or 1.	
 sim/cockpit2/switches/gnd_com_power_on	int	y	boolean	Switch, 0 or 1. This is to turn COM1 on to get a clearance without turning the rest of the avionics on.	
 sim/cockpit2/switches/navigation_lights_on	int	y	boolean	Switch, 0 or 1.	
@@ -5148,7 +5188,6 @@ sim/cockpit2/temperature/outside_air_temp_is_metric	int	y	boolean	1 if thermo is
 sim/cockpit2/transmissions/indicators/oil_temperature	float	y	any	Transmission oil temperature.  Units are the same as the max oil temperature in ACF file.	
 sim/cockpit2/transmissions/indicators/oil_pressure	float	y	any	Transmission oil pressure.  Units are the same as the max oil pressure in ACF file.	
 sim/cockpit2/weapons/weapon_select_console_index	int	y	index	(V10 style!) Weapon index selected on the weapon console.	
-sim/cockpit2/weapons/weapon_select_console_name	byte[1024]	n	
 sim/cockpit2/weapons/fire_mode	int	y	enum	Weapon fire-mode, 0=single, 1=pair, 2=ripple, 3=salvo.	
 sim/cockpit2/weapons/fire_rate	int	y	enum	Weapon fire-rate, 0, 1, 2, 3 depending on fire rate.	
 sim/cockpit2/weapons/weapon_selected	int	y	enum	Switch position for each weapon-arming switch (there can be several). These are the rotaries that can be dialed up or down to select various systems.	
@@ -5216,9 +5255,14 @@ sim/flightmodel2/engines/is_on_fire	float[16]	n	0..1	Engine fire, 0 means none, 
 sim/flightmodel2/engines/side_sign	float[16]	n	-1,0,1	Sign of the side of the ACF for this engine: -1 for left side, 0 for inline, 1 for right side	
 sim/flightmodel2/engines/N1_percent	float[16]	n	percent	N1 speed as percent of max (per engine)	
 sim/flightmodel2/engines/N2_percent	float[16]	n	percent	N2 speed as percent of max (per engine)	
-sim/flightmodel2/engines/ITT_deg_C	float[16]	n	degrees	ITT (per engine) in degrees C	
-sim/flightmodel2/engines/EGT_deg_C	float[16]	n	degrees	EGT (per engine) in degrees C	
-sim/flightmodel2/engines/CHT_deg_C	float[16]	n	degrees	CHT (per engine) in degrees C	
+sim/flightmodel2/engines/ITT_deg_C	float[16]	n	degrees	ITT (per engine) in degrees C - use sim/flightmodel2/engines/actuators/ITT_deg_cel	REPLACED - Use the replacement instead.
+sim/flightmodel2/engines/EGT_deg_C	float[16]	n	degrees	EGT (per engine) in degrees C - use sim/flightmodel2/engines/actuators/EGT_deg_cel	REPLACED - Use the replacement instead.
+sim/flightmodel2/engines/CHT_deg_C	float[16]	n	degrees	CHT (per engine) in degrees C - use sim/flightmodel2/engines/actuators/CHT_deg_cel	REPLACED - Use the replacement instead.
+sim/flightmodel2/engines/ITT_deg_cel	float[16]	y	degc	ITT (per engine) in degrees celcius	
+sim/flightmodel2/engines/EGT_deg_cel	float[16]	y	degc	EGT (per engine) in degrees celcius	
+sim/flightmodel2/engines/CHT_deg_cel	float[16]	y	degc	CHT (per engine) in degrees celcius	
+sim/flightmodel2/engines/EGT_CYL_cel	float[16][12]	y	degc	EGT (per engineper cylinder) in degrees celius. Up to 12 cylinders	
+sim/flightmodel2/engines/CHT_CYL_cel	float[16][12]	y	degc	CHT (per engine per cylinder) in degrees celius	
 sim/flightmodel2/engines/jetwash_mtr_sec	float[16]	n	meters/second	Speed of jetwash behind the engine exhaust in meters/second	
 sim/flightmodel2/engines/propwash_mtr_sec	float[16]	n	meters/second	Speed of propwash behind the prop disc in meters/second	
 sim/flightmodel2/engines/rotor_blade_alpha_deg	float[16]	n	degrees	Blade alpha is the dynamic-pressure-weighted average of all element angles of attack of the rotor blades. Expect blade slap as these numbers approach stall, if the disc angle of attack is near zero, so the vortices are not being cleared form the disc.	
@@ -5303,6 +5347,7 @@ sim/flightmodel2/misc/auto_start_in_progress	int	y	boolean	True while the auto-s
 sim/flightmodel2/misc/auto_board_in_progress	int	y	boolean	True while the auto-board sequence is happening.  Plugins that override the auto-board sequence should set this to 1 during the sequence and clear it when done.	
 sim/flightmodel2/misc/tailhook_angle_degrees	float	n	degrees	Angle of the tailhook	
 sim/flightmodel2/misc/tow_in_progress	int	n	boolean	True while a tow operation is currently taking place.	
+sim/flightmodel2/misc/line_is_locked	int	n	boolean	True while a smart-drogue tow operation is currently taking place.	
 sim/flightmodel2/misc/has_crashed	int	n	boolean	True if the aircraft is in a crashed state	
 sim/flightmodel2/misc/cg_offset_z	float	y	meters	Longitudinal Center of Gravity, including payload, and including internal and external fuel	
 sim/flightmodel2/misc/cg_offset_x	float	y	meters	Lateral Center of Gravity (can't be set on all craft, only on such with weight stations off the centerline) including payload and including internal or external fuel or weapons	
