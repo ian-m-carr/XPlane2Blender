@@ -242,12 +242,10 @@ class XPlaneMaterial:
             if xplane_version >= 1100:
                 value = [
                         mat.xplane.plugin_device if mat.xplane.device_name == DEVICE_PLUGIN else mat.xplane.device_name,
-                        #bin(
-                            sum(
-                                getattr(mat.xplane, f"device_bus_{i}") << i
-                                for i in range(6)
-                            ),                          
-                        #)[2:], IMC: the bus device is not actually a bitfield but the integer representation of the bits
+                        sum(
+                            getattr(mat.xplane, f"device_bus_{i}") << i
+                            for i in range(6)
+                        ),
                         mat.xplane.device_lighting_channel,
                         mat.xplane.device_auto_adjust,
                     ]
