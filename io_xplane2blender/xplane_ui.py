@@ -1338,7 +1338,8 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
             ):
                 is_spec_hidden = True
 
-                if hasattr(surface_shader_node.inputs, "Specular"):
+                # node renamed for version 4.0.0+
+                if (4,0,0) > bpy.app.version:
                     node_specular = surface_shader_node.inputs["Specular"].default_value
                 else:
                     node_specular = surface_shader_node.inputs["Specular IOR Level"].default_value
