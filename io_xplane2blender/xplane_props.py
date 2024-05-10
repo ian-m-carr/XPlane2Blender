@@ -1599,7 +1599,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     normal_decal1_x_scale: bpy.props.FloatProperty(
         name = "Normal Map Decal 1 X Scale",
-        description = "X scale of the draped map decal",
+        description = "X scale of the normal map decal",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1608,7 +1608,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     
     normal_decal1_y_scale: bpy.props.FloatProperty(
         name = "Normal Map Decal 1 Y Scale",
-        description = "Y scale of the draped map decal",
+        description = "Y scale of the normal map decal",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1626,7 +1626,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     normal_decal2_x_scale: bpy.props.FloatProperty(
         name = "Normal Map Decal 2 X Scale",
-        description = "X scale of the draped map decal",
+        description = "X scale of the normal map decal",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1635,7 +1635,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     
     normal_decal2_y_scale: bpy.props.FloatProperty(
         name = "Normal Map Decal 2 Y Scale",
-        description = "Y scale of the draped map decal",
+        description = "Y scale of the normal map decal",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -2317,8 +2317,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
             (DEVICE_Primus_MFD_3,       DEVICE_Primus_MFD_3,        DEVICE_Primus_MFD_3),
             (DEVICE_Primus_RMU_1,       DEVICE_Primus_RMU_1,        DEVICE_Primus_RMU_1),
             (DEVICE_Primus_RMU_2,       DEVICE_Primus_RMU_2,        DEVICE_Primus_RMU_2),
-            (DEVICE_FMGSMCDU_1,         DEVICE_FMGSMCDU_1,          DEVICE_FMGSMCDU_1),
-            (DEVICE_FMGSMCDU_2,         DEVICE_FMGSMCDU_2,          DEVICE_FMGSMCDU_2),
+            (DEVICE_MCDU_1,             DEVICE_MCDU_1,              DEVICE_MCDU_1),
+            (DEVICE_MCDU_2,             DEVICE_MCDU_2,              DEVICE_MCDU_2),
             (DEVICE_PLUGIN,             DEVICE_PLUGIN,              DEVICE_PLUGIN)
             
         ]
@@ -2559,10 +2559,10 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         min = 0.0,
     )
 
-    param_intensity: bpy.props.FloatProperty(
+    param_intensity_new: bpy.props.FloatProperty(
         name = "Intensity",
         description="Total light output in a specific direction, in candela",
-        min=1,
+        min=0.01,
         max=1000000,
         default=20000,
     )

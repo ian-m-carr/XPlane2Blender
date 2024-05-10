@@ -723,8 +723,16 @@ def layer_layout(
         decal_box.prop(layer_props, "file_normal_decal1", text="Normal Map Decal 1")
 
         if layer_props.file_normal_decal1:
-            decal_box.prop(layer_props, "normal_decal1_scale", text="Scale")
+            normal_decal1_row = decal_box.row()
 
+            normal_decal1_row.prop(layer_props, "normal_decal1_projected", text="Projected")
+
+            if layer_props.normal_decal1_projected:
+                normal_decal1_row.prop(layer_props, "normal_decal1_x_scale", text="X Scale")
+                normal_decal1_row.prop(layer_props, "normal_decal1_y_scale", text="Y Scale")
+            else:
+                normal_decal1_row.prop(layer_props, "normal_decal1_scale", text="Scale")
+            
             decal_box.prop(layer_props, "normal_decal1_red_key", text="Red Key")
             decal_box.prop(layer_props, "normal_decal1_green_key", text="Green Key")
             decal_box.prop(layer_props, "normal_decal1_blue_key", text="Blue Key")
@@ -735,8 +743,16 @@ def layer_layout(
         decal_box.prop(layer_props, "file_normal_decal2", text="Normal Map Decal 2")
         
         if layer_props.file_normal_decal2:
-            decal_box.prop(layer_props, "normal_decal2_scale", text="Scale")
-        
+            normal_decal2_row = decal_box.row()
+
+            normal_decal2_row.prop(layer_props, "normal_decal2_projected", text="Projected")
+
+            if layer_props.normal_decal2_projected:
+                normal_decal2_row.prop(layer_props, "normal_decal2_x_scale", text="X Scale")
+                normal_decal2_row.prop(layer_props, "normal_decal2_y_scale", text="Y Scale")
+            else:
+                normal_decal2_row.prop(layer_props, "normal_decal2_scale", text="Scale")
+            
             decal_box.prop(layer_props, "normal_decal2_red_key", text="Red Key")
             decal_box.prop(layer_props, "normal_decal2_green_key", text="Green Key")
             decal_box.prop(layer_props, "normal_decal2_blue_key", text="Blue Key")
@@ -748,13 +764,15 @@ def layer_layout(
             decal_box.prop(layer_props, "file_draped_normal_decal1", text="Draped Normal Map Decal 1")
 
             if layer_props.file_draped_normal_decal1:
-                decal_box.prop(layer_props, "draped_normal_decal1_projected", text="Projected")
+                draped_normal_decal1_row = decal_box.row()
+
+                draped_normal_decal1_row.prop(layer_props, "draped_normal_decal1_projected", text="Projected")
 
                 if layer_props.draped_normal_decal1_projected:
-                    decal_box.prop(layer_props, "draped_normal_decal1_x_scale", text="X Scale")
-                    decal_box.prop(layer_props, "draped_normal_decal1_y_scale", text="Y Scale")
+                    draped_normal_decal1_row.prop(layer_props, "draped_normal_decal1_x_scale", text="X Scale")
+                    draped_normal_decal1_row.prop(layer_props, "draped_normal_decal1_y_scale", text="Y Scale")
                 else:
-                    decal_box.prop(layer_props, "draped_normal_decal1_scale", text="Scale")
+                    draped_normal_decal1_row.prop(layer_props, "draped_normal_decal1_scale", text="Scale")
             
                 decal_box.prop(layer_props, "draped_normal_decal1_red_key", text="Red Key")
                 decal_box.prop(layer_props, "draped_normal_decal1_green_key", text="Green Key")
@@ -766,9 +784,16 @@ def layer_layout(
             decal_box.prop(layer_props, "file_draped_normal_decal2", text="Draped Normal Map Decal 2")
 
             if layer_props.file_draped_normal_decal2:
-                decal_box.prop(layer_props, "draped_normal_decal2_x_scale", text="X Scale")
-                decal_box.prop(layer_props, "draped_normal_decal2_y_scale", text="Y Scale")
-            
+                draped_normal_decal2_row = decal_box.row()
+
+                draped_normal_decal2_row.prop(layer_props, "draped_normal_decal2_projected", text="Projected")
+
+                if layer_props.draped_normal_decal2_projected:
+                    draped_normal_decal2_row.prop(layer_props, "draped_normal_decal2_x_scale", text="X Scale")
+                    draped_normal_decal2_row.prop(layer_props, "draped_normal_decal2_y_scale", text="Y Scale")
+                else:
+                    draped_normal_decal2_row.prop(layer_props, "draped_normal_decal2_scale", text="Scale")
+
                 decal_box.prop(layer_props, "draped_normal_decal2_red_key", text="Red Key")
                 decal_box.prop(layer_props, "draped_normal_decal2_green_key", text="Green Key")
                 decal_box.prop(layer_props, "draped_normal_decal2_blue_key", text="Blue Key")
@@ -1145,7 +1170,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
             elif parsed_light.light_param_def:
                 for param, prop_name in {
                     "INDEX": "param_index",
-                    "INTENSITY": "param_intensity",
+                    "INTENSITY": "param_intensity_new",
                     "FREQ": "param_freq",
                     "PHASE": "param_phase",
                     "SIZE": "param_size",
@@ -1155,7 +1180,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                         and parsed_light.name
                         in xplane_lights_txt_parser.SIZE_AS_INTENSITY
                     ):
-                        prop_name = "param_intensity"
+                        prop_name = "param_intensity_new"
 
                     if param in parsed_light.light_param_def:
                         layout.row().prop(light_data.xplane, prop_name)
@@ -1313,8 +1338,7 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
             ):
                 is_spec_hidden = True
 
-                # node renamed for version 4.0.0+
-                if (4,0,0) > bpy.app.version:
+                if hasattr(surface_shader_node.inputs, "Specular"):
                     node_specular = surface_shader_node.inputs["Specular"].default_value
                 else:
                     node_specular = surface_shader_node.inputs["Specular IOR Level"].default_value
