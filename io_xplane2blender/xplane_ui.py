@@ -192,7 +192,6 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             object_layer_layout(self.layout, obj)
 
             animation_layout(self.layout, obj)
-            substitution_vars_layout(self.layout, obj)
             if obj.type == "MESH":
                 mesh_layout(self.layout, obj)
                 manipulator_layout(self.layout, obj)
@@ -399,33 +398,10 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
             collection_layer_layout(non_exp_box, collection)
 
     advanced_box = layout.box()
-    advanced_box.use_property_split = True
-    advanced_box.label(text="Advanced Settings (General)")
-    advanced_column = advanced_box.column()
-    advanced_column.prop(scene.xplane, "debug")
-
-    advanced_box = layout.box()
-    advanced_box.use_property_split=True
-    advanced_box.label(text="Advanced Settings (EXPORT)")
+    advanced_box.label(text="Advanced Settings")
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "optimize")
-    advanced_column.prop(scene.xplane, "x_forward")
-
-    advanced_column.prop(scene.xplane, "export_offset")
-
-    advanced_box = layout.box()
-    advanced_box.use_property_split = True
-    advanced_box.label(text="Advanced Settings (IMPORT)")
-    advanced_column = advanced_box.column()
-    # auto-smooth is replaced by a modifier in 4.1
-    if bpy.app.version < (4, 1, 0):
-        advanced_column.prop(scene.xplane, "auto_smooth")
-    advanced_column.prop(scene.xplane, "smooth")
-    advanced_column.prop(scene.xplane, "remove_doubles")
-
-    advanced_box.label(text="Import fixups")
-    advanced_column = advanced_box.column()
-    advanced_column.prop(scene.xplane, "manip_rotate_missing_anim_fixup")
+    advanced_column.prop(scene.xplane, "debug")
 
     if scene.xplane.debug:
         debug_box = advanced_column.box()
@@ -816,11 +792,6 @@ def layer_layout(
         row.active = layer_props.luminance_override
         row.prop(layer_props, "luminance_override", text="")
         row.prop(layer_props, "luminance")
-    if version >= 1200:
-        row = global_mat_box.row(align=True)
-        row.active = layer_props.global_specular_override
-        row.prop(layer_props, "global_specular_override", text="")
-        row.prop(layer_props, "global_specular")
     if version >= 1100:
         if layer_props.export_type in {
             EXPORT_TYPE_INSTANCED_SCENERY,
@@ -1242,15 +1213,6 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                                 5,
                             )
                     debug_box.row().label(text=f"Width: {WIDTH_val}")
-
-                has_intensity = "INTENSITY" in parsed_light.light_param_def
-                if has_intensity:
-                    debug_box.row().label(text=f"Approximate Blender/X-Plane conversions")
-                    debug_box.row().label(text=f"Power: {light_data.energy:.2f} W -> "
-                                               f"Intensity: {xplane_types.XPlaneLight.candela_from_watt_approx(light_data.energy):.2f} cd")
-                    debug_box.row().label(
-                        text=f"Intensity: {light_data.xplane.param_intensity:.2f} cd -> "
-                             f"Power: {xplane_types.XPlaneLight.watt_from_candela_approx(light_data.xplane.param_intensity):.2f} W")
                 # ---------------------------------------------------------
                 # try_param("param_index", "INDEX", "Dataref Index", n=0)
                 # try_param("param_freq", "FREQ", "Freq")
@@ -1338,12 +1300,11 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
             ):
                 is_spec_hidden = True
 
-                # node renamed for version 4.0.0+
-                if (4,0,0) > bpy.app.version:
+                if "Specular" in surface_shader_node.inputs:
                     node_specular = surface_shader_node.inputs["Specular"].default_value
                 else:
                     node_specular = surface_shader_node.inputs["Specular IOR Level"].default_value
-
+                
                 # Potential default values. Hopefully we get no false positives.
                 node_specular_at_default = any(
                     (rnd_cmp_eq(node_specular, d) for d in [0.0, 0.5])
@@ -1584,39 +1545,6 @@ def animation_layout(
             subrow.prop(attr, "show_hide_v2")
             subrow = subbox.row()
             subrow.prop(attr, "loop")
-
-
-def substitution_vars_layout(layout: bpy.types.UILayout, obj: bpy.types.Object, is_bone: bool = False):
-    """
-    Draws UI Layout for animations, including datarefs
-    and the datarefs search window
-    """
-    layout.separator()
-    row = layout.row()
-    row.label(text="Dataref substitution vars")
-    if is_bone:
-        row.operator("bone.add_xplane_dataref_var", text="Add Dataref Substitution Var")
-    else:
-        row.operator("object.add_xplane_dataref_var", text="Add Dataref Substitution Var")
-
-    box = layout.box()
-    for i, attr in enumerate(obj.xplane.dataref_vars):
-        subbox = box.box()
-        subrow = subbox.row()
-        subrow.prop(attr, "ident")
-
-        if is_bone:
-            subrow.operator(
-                "bone.remove_xplane_dataref_var", text="", emboss=False, icon="X"
-            ).index = i
-        else:
-            subrow.operator(
-                "object.remove_xplane_dataref_var", text="", emboss=False, icon="X"
-            ).index = i
-
-        subrow = subbox.row()
-        subrow.prop(attr, "value")
-
 
 def cockpit_layout(
     layout: bpy.types.UILayout, active_material: bpy.types.Material
